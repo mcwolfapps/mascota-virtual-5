@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14171c">
+<link rel="manifest" href="manifest.json">
+<title>Mascota metálica – asistente</title>
+<style>
+:root{--bg:#14171c;--panel:#1d2229;--ink:#e6eaf0;--mut:#8b95a3;--acc:#7fd1ff;color-scheme:dark}
+@media (prefers-color-scheme:light){:root{--bg:#e9edf2;--panel:#fff;--ink:#1b2027;--mut:#5d6877;--acc:#0a7bc4;color-scheme:light}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,sans-serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none}
+button,input,textarea{font:inherit;color:var(--ink)}
+button{background:var(--panel);border:1px solid #8884;border-radius:10px;padding:9px 13px;cursor:pointer}
+button:hover{border-color:var(--acc)}
+html.overlay,html.overlay body{background:transparent}
+.card{display:flex;align-items:center;gap:10px;border:1px solid #8884;border-radius:12px;padding:10px;margin:8px 0;cursor:pointer}
+.card .ic{font-size:28px;width:40px;text-align:center}
+.card .tx{flex:1}
+.card .tx small{color:var(--mut);display:block}
+.card.on{border-color:var(--acc)}
+.card.lock .ic{filter:grayscale(1) opacity(.55)}
+.tag{background:#f5b301;color:#000;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.pro{background:linear-gradient(135deg,#f5b301,#ff7a1a);color:#000;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:700}
+.fake{filter:blur(2.5px);opacity:.7;pointer-events:none}
+.bars{display:flex;align-items:flex-end;gap:6px;height:60px;margin:6px 0}
+.bars i{flex:1;background:var(--acc);border-radius:4px 4px 0 0}
+.mb .lk{position:absolute;top:-3px;right:-3px;font-size:13px}
+input[type=checkbox]{width:auto;margin:0 8px 0 0;vertical-align:middle}
+select{width:100%;background:var(--panel);color:var(--ink);border:1px solid #8886;border-radius:8px;padding:8px;margin:4px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.chip{padding:6px 10px;font-size:13px;display:flex;align-items:center;gap:5px}
+.chip.on{border-color:var(--acc);background:#7fd1ff22}
+.chip.lock{opacity:.75}
+#pro{width:100%;margin-bottom:6px}
+#pro.on{background:linear-gradient(135deg,#f5b301,#ff7a1a);color:#000;border:0}
+.cw{display:inline-flex;gap:2px}
+.ed{padding:4px 7px;font-size:12px}
+.ans{white-space:pre-wrap;word-break:break-word}
+.thumb{width:40px;height:58px;object-fit:cover;border-radius:4px;background:#8883}
+img.apod{width:100%;border-radius:10px;margin:6px 0}
+a.lnk{color:var(--acc)}
+#thought{position:fixed;left:0;top:0;max-width:min(230px,70vw);background:var(--panel);border:1px dashed var(--acc);border-radius:22px;padding:8px 13px;display:none;text-align:center;z-index:3;pointer-events:none;font-style:italic;opacity:.93}
+#thought::before,#thought::after{content:"";position:absolute;background:var(--panel);border:1px dashed var(--acc);border-radius:50%}
+#thought.up::before{width:10px;height:10px;left:16px;bottom:-14px}
+#thought.up::after{width:6px;height:6px;left:8px;bottom:-24px}
+#thought.down::before{width:10px;height:10px;left:16px;top:-14px}
+#thought.down::after{width:6px;height:6px;left:8px;top:-24px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:middle;margin-right:6px;border:1px solid #8886}
+#menu{position:fixed;inset:0;pointer-events:none;z-index:6}
+.mb{position:fixed;left:0;top:0;width:52px;height:52px;border-radius:50%;padding:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:19px;pointer-events:auto;box-shadow:0 4px 14px #0005;border-color:var(--acc)}
+.mb small{font-size:9px;color:var(--mut)}
+#panel{position:fixed;left:50%;transform:translateX(-50%);width:min(440px,94vw);max-height:55vh;overflow:auto;background:var(--panel);border:1px solid #8884;border-radius:14px;padding:14px;display:none;z-index:7}
+#panel.top{top:calc(12px + env(safe-area-inset-top,0px))}
+#panel.bot{bottom:calc(60px + env(safe-area-inset-bottom,0px))}
+#panel h3{margin:0 0 8px;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+#panel h3 button{padding:3px 9px}
+input,textarea{width:100%;background:transparent;border:1px solid #8886;border-radius:8px;padding:8px;margin:4px 0}
+.note{display:flex;gap:8px;justify-content:space-between;align-items:flex-start;border-top:1px solid #8883;padding:8px 0}
+.note span{white-space:pre-wrap;word-break:break-word}
+.note mark{background:var(--acc);color:#000;border-radius:3px}
+.mut{color:var(--mut);font-size:13px}
+#bubble{position:fixed;left:0;top:0;max-width:min(260px,80vw);background:var(--panel);border:1px solid var(--acc);border-radius:14px;padding:8px 12px;display:none;text-align:center;z-index:4;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="bubble"></div>
+<div id="thought"></div>
+<div id="menu">
+  <button class="mb" data-t="notas">📝<small>Notas</small></button>
+  <button class="mb" data-t="buscar">🔍<small>Buscar</small></button>
+  <button class="mb" data-t="evento">📅<small>Evento</small></button>
+  <button class="mb" data-t="tiempo">⏱️<small>Tiempo</small></button>
+  <button class="mb" data-t="mascotas">🐾<small>Mascotas</small></button>
+  <button class="mb" data-t="web">🌐<small>Web</small></button>
+  <button class="mb" data-t="config">⚙️<small>Ajustes</small></button>
+</div>
+<div id="panel"></div>
+<script src="claves.js" onerror="void 0"></script>
+<script>
+// ---------- Almacenamiento ----------
+const store={
+  get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+let notes=store.get('notes',[]);
+let proOn=store.get('pro',false);      // modo prueba de Pro
+let petKey=store.get('pet','ciempies');
+
+// ---------- Lienzo ----------
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H,DPR;
+function resize(){DPR=devicePixelRatio||1;W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener('resize',resize);resize();
+
+// ---------- Definición de mascotas ----------
+const MIN_SEG=10,MAX_SEG=26;
+const D=()=>DEF[petKey];
+const GL=()=>(D().glow||'#7fd1ff')+'99';   // halo neón (estilo dark)
+const FAM={
+  centi:{count:()=>Math.min(D().max||24,(D().n||12)+notes.length*(D().grow||1)),space:()=>D().gap||24,speed:90,fast:170,draw:wCenti},
+  ant:{count:()=>3,space:i=>i===1?19:25,speed:70,fast:140,draw:wAnt},
+  mantis:{count:()=>4,space:i=>[0,24,15,27][i],speed:60,fast:125,draw:wMantis},
+  beetle:{count:()=>3,space:i=>i===1?17:22,speed:55,fast:115,draw:wBeetle},
+  spider:{count:()=>2,space:()=>21*(D().size||1),speed:85,fast:150,draw:drawSpider},
+  bee:{count:()=>3,space:i=>[0,13,19][i],speed:110,fast:200,draw:wBee},
+  lady:{count:()=>2,space:()=>14,speed:60,fast:120,draw:wLady},
+  dragon:{count:()=>5,space:()=>15,speed:120,fast:210,draw:wDragon},
+  scorp:{count:()=>4,space:i=>[0,17,14,14][i],speed:65,fast:130,draw:wScorp}
+};
+const FAMS=[['centi','🐛','Ciempiés'],['ant','🐜','Hormigas'],['mantis','🦗','Mantis'],['beetle','🪲','Escarabajos'],['spider','🕷️','Arañas'],['bee','🐝','Abejas y avispas'],['lady','🐞','Mariquitas'],['dragon','🦋','Libélulas'],['scorp','🦂','Escorpiones']];
+const PRICE={1:['S/ 1','≈ $0.30'],2:['S/ 2','≈ $0.55'],3:['S/ 3','≈ $0.80']};
+// free:1 = gratis · p = nivel de precio Pro (1 a 3 soles)
+const DEF={
+  ciempies:{fam:'centi',name:'Ciempiés',ic:'🐛',free:1,hue:210,sat:12,glow:'#7fd1ff',legc:'#6a7686',n:12,gap:24,max:24,leg:22},
+  ciempies_rojo:{fam:'centi',name:'Ciempiés rojo',ic:'🐛',p:1,hue:4,sat:48,glow:'#ff8a5c',legc:'#b0605a',n:12,gap:24,max:24,leg:22},
+  milpies:{fam:'centi',name:'Milpiés',ic:'🐛',p:2,hue:275,sat:22,glow:'#c79bff',legc:'#7c6a96',mil:1,n:30,gap:12,max:60,grow:2,leg:10,sp:.7},
+  hormiga:{fam:'ant',name:'Hormiga',ic:'🐜',free:1,hue:28,sat:38,legc:'#946c44'},
+  hormiga_fuego:{fam:'ant',name:'Hormiga de fuego',ic:'🐜',p:1,hue:6,sat:62,legc:'#b4533d',sp:1.2},
+  hormiga_verde:{fam:'ant',name:'Hormiga cortadora',ic:'🐜',p:1,hue:105,sat:34,legc:'#6f9a5a'},
+  mantis:{fam:'mantis',name:'Mantis robótica',ic:'🦗',p:2,hue:150,sat:22},
+  mantis_orquidea:{fam:'mantis',name:'Mantis orquídea',ic:'🦗',p:3,hue:330,sat:32},
+  escarabajo:{fam:'beetle',name:'Escarabajo metálico',ic:'🪲',p:3,hue:195,sat:36},
+  escarabajo_oro:{fam:'beetle',name:'Escarabajo dorado',ic:'🪲',p:2,hue:44,sat:62},
+  escarabajo_hercules:{fam:'beetle',name:'Escarabajo Hércules',ic:'🪲',p:3,hue:125,sat:26,horn:1.6,sp:.9},
+  tarantula:{fam:'spider',name:'Tarántula',ic:'🕷️',p:3,hue:25,sat:24,size:1.25,hairy:1,glow:'#ffb347',legc:'#7a6657',lw:3.4,sp:.8},
+  viuda:{fam:'spider',name:'Viuda negra',ic:'🕷️',p:2,hue:220,sat:8,size:.95,hourglass:1,glow:'#ff4d4d',legc:'#2f3640',lw:2},
+  saltadora:{fam:'spider',name:'Araña saltadora',ic:'🕷️',p:2,hue:200,sat:30,size:.7,bigEyes:1,glow:'#7fd1ff',legc:'#5a7388',lw:2.2,sp:.9},
+  patas_largas:{fam:'spider',name:'Araña patas largas',ic:'🕷️',p:2,hue:215,sat:8,size:.9,leg:84,lw:2,arch:.3,abx:1.15,aby:.95,armor:1,glow:'#ff2d3a',legc:'#aab4c2'},
+  abeja:{fam:'bee',name:'Abeja',ic:'🐝',p:2,hue:44,sat:78},
+  avispa:{fam:'bee',name:'Avispa',ic:'🐝',p:2,hue:54,sat:90,slim:1,sp:1.2},
+  mariquita:{fam:'lady',name:'Mariquita',ic:'🐞',p:1,hue:4,sat:72},
+  mariquita_naranja:{fam:'lady',name:'Mariquita naranja',ic:'🐞',p:1,hue:26,sat:88},
+  mariquita_azul:{fam:'lady',name:'Mariquita azul',ic:'🐞',p:1,hue:210,sat:56},
+  libelula:{fam:'dragon',name:'Libélula',ic:'🦋',p:2,hue:190,sat:60,glow:'#7fd1ff',wing:'rgba(150,230,255,.28)'},
+  libelula_roja:{fam:'dragon',name:'Libélula roja',ic:'🦋',p:2,hue:355,sat:62,glow:'#ffd27f',wing:'rgba(255,170,190,.28)'},
+  escorpion:{fam:'scorp',name:'Escorpión',ic:'🦂',p:3,hue:36,sat:45,glow:'#ffb347',legc:'#a8854f'},
+  escorpion_negro:{fam:'scorp',name:'Escorpión negro',ic:'🦂',p:3,hue:230,sat:10,glow:'#ff4d4d',legc:'#39424f',sp:1.1}
+};
+// ---------- Creador de mascotas: datos ----------
+const CR_COLORS={acero:['Acero',215,8],negro:['Negro',230,6],rojo:['Rojo',355,62],naranja:['Naranja',24,80],dorado:['Dorado',44,66],verde:['Verde',130,40],turquesa:['Turquesa',180,55],azul:['Azul',215,62],violeta:['Violeta',275,45],rosa:['Rosa',330,55]};
+const CR_NEON={cian:['Cian','#7fd1ff'],rojo:['Rojo','#ff2d3a'],verde:['Verde','#7dff9a'],naranja:['Naranja','#ff9a3c'],rosa:['Rosa','#ff7ac8'],violeta:['Violeta','#c79bff'],blanco:['Blanco','#f2f5f8']};
+const CR_FAM={centi:['🐛','Ciempiés o milpiés'],ant:['🐜','Hormiga'],mantis:['🦗','Mantis'],beetle:['🪲','Escarabajo'],spider:['🕷️','Araña'],bee:['🐝','Abeja o avispa'],lady:['🐞','Mariquita'],dragon:['🦋','Libélula'],scorp:['🦂','Escorpión']};
+function buildCustom(c){
+  const col=CR_COLORS[c.color]||CR_COLORS.acero,glow=(CR_NEON[c.neon]||CR_NEON.cian)[1],fam=CR_FAM[c.fam]?c.fam:'ant';
+  const d={fam,name:c.name||'Mi mascota',ic:CR_FAM[fam][0],free:1,custom:1,slot:c.slot==null?null:c.slot,hue:col[1],sat:col[2],glow,legc:`hsl(${col[1]},${Math.round(col[2]*.5)}%,58%)`,fin:{mate:-8,metal:0,cromo:14}[c.fin||'metal'],sc:Math.max(.5,Math.min(1.5,(c.tam||100)/100))};
+  if(fam==='centi'){const mil=c.form==='mil',n=Math.max(6,Math.min(mil?60:26,Math.round(c.n||(mil?30:12))));
+    if(mil)Object.assign(d,{mil:1,n,gap:12,max:Math.max(60,n+10),grow:2,leg:10,sp:.7});else Object.assign(d,{n,gap:24,max:Math.max(26,n+8),leg:22})}
+  if(fam==='spider'){d.leg={cor:27,nor:45,lar:84}[c.legs||'nor'];d.lw=c.legs==='lar'?1.8:2.4;
+    const t=c.traits||[];d.hairy=t.includes('hairy')?1:0;d.hourglass=t.includes('hour')?1:0;d.bigEyes=t.includes('eyes')?1:0;
+    if(t.includes('armor')){d.armor=1;d.abx=1.15;d.aby=.95}if(c.legs==='lar')d.arch=.3}
+  if(fam==='beetle')d.horn={no:0,nor:1,big:1.6}[c.horn||'nor'];
+  if(fam==='bee'&&c.form==='avispa'){d.slim=1;d.sp=1.2}
+  if(fam==='dragon')d.wing=`hsla(${col[1]},70%,75%,.28)`;
+  return d;
+}
+let customs=store.get('customs',null);          // mis mascotas: yo0, yo1, …
+if(!customs){const o=store.get('custom',null);customs=o?[o]:[];store.set('customs',customs);if(petKey==='custom')petKey=o?'yo0':'ciempies'}
+function loadCustoms(){Object.keys(DEF).filter(k=>DEF[k].custom&&k!=='custom').forEach(k=>delete DEF[k]);customs.forEach((sp,i)=>{DEF['yo'+i]=buildCustom(Object.assign({},sp,{slot:i}))})}
+loadCustoms();
+if(!DEF[petKey]||(!DEF[petKey].free&&!proOn))petKey='ciempies';
+let HS={x:0,y:0},segs=[],target,user=null,userUntil=0,idleUntil=0,t=0,speed=0;
+let menuOpen=false,panelOpen=false;
+const pet=()=>FAM[DEF[petKey].fam];
+function initSegs(x=W/2,y=H/2,a=0){HS.x=x;HS.y=y;segs=[];for(let i=0;i<pet().count();i++){let o=0;for(let k=1;k<=i;k++)o+=pet().space(k);segs.push({x:x-Math.cos(a)*o,y:y-Math.sin(a)*o,a})}}
+function newWander(){const mx=Math.min(60,W/4),my=Math.min(90,H/4);target={x:mx+Math.random()*Math.max(1,W-2*mx),y:my+Math.random()*Math.max(1,H-2*my)}}
+newWander();initSegs();
+
+const setUser=e=>{if(!isFinite(e.clientX)||!isFinite(e.clientY))return;user={x:Math.max(0,Math.min(W,e.clientX)),y:Math.max(0,Math.min(H,e.clientY))};userUntil=performance.now()+4000};
+cv.addEventListener('pointerdown',e=>{
+  const h=segs[0];
+  if(Math.hypot(e.clientX-HS.x,e.clientY-HS.y)<36){            // toque en la cabeza
+    if(panelOpen){closePanel();menuOpen=true}else menuOpen=!menuOpen;
+    refreshUI();return;
+  }
+  if(menuOpen||panelOpen){menuOpen=false;closePanel()}
+  setUser(e);
+});
+cv.addEventListener('pointermove',e=>{if(e.buttons&&!menuOpen&&!panelOpen)setUser(e)});
+
+let frameDt=.016,nextThought=performance.now()+9000,arrived=false;
+function update(dt){
+  t+=dt;frameDt=dt;
+  const now=performance.now(),paused=menuOpen||panelOpen;
+  if(now>nextThought&&!paused){nextThought=now+13000+Math.random()*14000;if(!bubbleOn&&!thoughtOn)thinkIdle()}
+  if(user&&now>=userUntil){user=null;newWander();idleUntil=now+300}      // fin de la persecución: destino nuevo
+  const chasing=!!user,goal=chasing?user:target,h=segs[0];
+  const dx=goal.x-HS.x,dy=goal.y-HS.y,d=Math.hypot(dx,dy);
+  if(!chasing&&d<30&&now>idleUntil){idleUntil=now+(Math.random()<.5?0:600+Math.random()*1800);newWander()}
+  const near=chasing&&d<20;if(near&&!arrived){arrived=true;setTimeout(()=>thinkEv('arrive'),700)}if(!chasing)arrived=false;                                              // llegó al puntero: se detiene (antes lo orbitaba)
+  if(!paused&&!near){
+    let da=Math.atan2(dy,dx)-h.a;da=Math.atan2(Math.sin(da),Math.cos(da));
+    h.a+=da*Math.min(1,dt*3)+Math.sin(t*1.7)*dt*0.4;
+  }
+  let v=(chasing?pet().fast:pet().speed)*(D().sp||1)*psk();
+  if(chasing)v*=Math.max(0,Math.min(1,(d-18)/90));                       // frena al acercarse
+  if(paused||near||(!chasing&&now<idleUntil))v=0;
+  speed+=(v-speed)*Math.min(1,dt*4);
+  {const k=psk(),ox=HS.x,oy=HS.y;                                        // la cabeza avanza en pantalla; el cuerpo, en su propio mundo (más grande)
+   HS.x=Math.max(24,Math.min(W-24,HS.x+Math.cos(h.a)*speed*dt));HS.y=Math.max(24,Math.min(H-24,HS.y+Math.sin(h.a)*speed*dt));
+   h.x+=(HS.x-ox)/k;h.y+=(HS.y-oy)/k}
+  for(let i=1;i<segs.length;i++){
+    const p=segs[i-1],s=segs[i],sp=pet().space(i);
+    const a=Math.atan2(p.y-s.y,p.x-s.x);
+    s.x=p.x-Math.cos(a)*sp;s.y=p.y-Math.sin(a)*sp;s.a=a;
+  }
+  while(segs.length<pet().count()){const l=segs[segs.length-1];segs.push({x:l.x,y:l.y,a:l.a})}
+  while(segs.length>pet().count())segs.pop();
+  // protección: si alguna coordenada se vuelve inválida (NaN), el lienzo dibuja en la esquina (0,0); se reinicia la mascota
+  if(segs.some(q=>!isFinite(q.x+q.y+q.a))){initSegs(W/2,H/2,0);speed=0;user=null;feet=null;gait=null;newWander()}
+}
+
+// ---------- Dibujo ----------
+function metal(r,hue,sat){
+  const g=ctx.createRadialGradient(-r*.35,-r*.35,r*.1,0,0,r);
+  g.addColorStop(0,`hsl(${hue},${Math.min(100,sat+22)}%,${40+(D().fin||0)}%)`);g.addColorStop(.45,`hsl(${hue},${Math.min(100,sat+14)}%,${16+(D().fin||0)*.4}%)`);g.addColorStop(1,`hsl(${hue},${Math.min(100,sat+8)}%,5%)`);
+  return g;
+}
+function legPts(bx,by,ax,ay,fx,fy,len,p,K=1,Bn=0){
+  const sw=Math.sin(p)*8*K,lift=Math.max(0,Math.cos(p));
+  return [bx+ax*len*.55+fx*(sw*.6+Bn*len),by+ay*len*.55+fy*(sw*.6+Bn*len),bx+ax*(len+lift*3)+fx*sw*1.6,by+ay*(len+lift*3)+fy*sw*1.6];
+}
+let legsMuted=false;
+function roboLeg(bx,by,k,col,w){if(legsMuted)return;                 // eslabones metálicos, pistón, articulaciones y pie
+  const [kx,ky,ex,ey]=k,g=D().glow||'#7fd1ff';
+  ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.strokeStyle='#0b0e12';ctx.lineWidth=w+1.8;ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(kx,ky);ctx.lineTo(ex,ey);ctx.stroke();
+  ctx.strokeStyle=col;ctx.lineWidth=w;ctx.stroke();
+  ctx.strokeStyle='#ffffff2e';ctx.lineWidth=Math.max(.5,w*.28);ctx.stroke();
+  const dx=kx-bx,dy=ky-by,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L,o=w*.9;
+  ctx.strokeStyle='#cfd6df88';ctx.lineWidth=Math.max(.6,w*.3);ctx.beginPath();
+  ctx.moveTo(bx+nx*o+dx*.15,by+ny*o+dy*.15);ctx.lineTo(kx+nx*o-dx*.15,ky+ny*o-dy*.15);ctx.stroke();
+  for(const [x,y,r] of [[bx,by,w*.75],[kx,ky,w*.7]]){ctx.fillStyle='#161b21';ctx.strokeStyle=col;ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,Math.max(1.4,r),0,7);ctx.fill();ctx.stroke()}
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(kx,ky,Math.max(.9,Math.min(2,w*.45)),0,7);ctx.fill();
+  ctx.fillStyle='#0e1115';ctx.beginPath();ctx.arc(ex,ey,Math.max(1.2,w*.55),0,7);ctx.fill();
+}
+function leg(bx,by,ax,ay,fx,fy,len,p,col,w,K=1,Bn=0){roboLeg(bx,by,legPts(bx,by,ax,ay,fx,fy,len,p,K,Bn),col,w)}
+const rate=()=>Math.max(1.2,Math.min(14,speed/9));
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+// modos "imposibles" cada 12 s: 2.5 s de patas-hélice (giran 360° sobre su base) y 2.5 s de patas-pistón (se alargan y encogen)
+function trickW(){const c=t%12,b=(a,e)=>c>a&&c<e?Math.sin(Math.PI*(c-a)/(e-a)):0;return[b(7,9.5),b(9.5,12)]}
+function drawCentipede(){
+  const d=D(),n=segs.length,mil=!!d.mil,[wp,wi]=trickW(),ww=1-wp-wi,base=d.n||12,g=d.glow;
+  // cable/columna que une los segmentos
+  ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();segs.forEach((s,i)=>i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y));
+  ctx.strokeStyle='#0b0e12';ctx.lineWidth=mil?5:7;ctx.stroke();ctx.strokeStyle=g+'77';ctx.lineWidth=1.5;ctx.stroke();
+  const drawLegs=()=>{
+  // patas montadas sobre las placas (se ven también al girar)
+  for(let i=n-1;i>=0;i--){
+    const s=segs[i],fx=Math.cos(s.a),fy=Math.sin(s.a),f=i/n;
+    const len=(d.leg||22)*(1-f*.28)*(i===0?.6:1),col=i>=base-1?g:d.legc;
+    for(const side of[-1,1])for(let q=0;q<(mil?2:1);q++){
+      const off=mil?(q?-3.5:3.5):0,R=mil?7:11,nx=-Math.sin(s.a)*side,ny=Math.cos(s.a)*side;
+      const ph=t*rate()*(mil?.9:1)-i*(mil?.35:.7)+(side>0?Math.PI:0)+(mil?q*.5:0);
+      const bx=s.x+fx*off+nx*R*.9,by=s.y+fy*off+ny*R*.9;
+      let k=legPts(bx,by,nx,ny,fx,fy,len,ph);
+      if(wp>0||wi>0){
+        const ang=t*7+i*.4+q*.8+(side>0?Math.PI:0),cx=Math.cos(ang),cy=Math.sin(ang);
+        const prop=[bx+cx*len*.55,by+cy*len*.55,bx+cx*len*1.1,by+cy*len*1.1];
+        const ext=len*(1+.75*Math.sin(t*5+i*.5+q));
+        const pis=[bx+nx*ext*.5,by+ny*ext*.5,bx+nx*ext,by+ny*ext];
+        k=k.map((v,j)=>v*ww+prop[j]*wp+pis[j]*wi);
+      }
+      roboLeg(bx,by,k,col,mil?2:3.2);
+    }
+  }
+  if(!mil){                                         // patas traseras largas
+    const s=segs[n-1],fx=Math.cos(s.a),fy=Math.sin(s.a);
+    for(const sy of[-1,1]){const a=s.a+Math.PI+sy*(.18+Math.sin(t*3+sy)*.25),bx=s.x-fx*8,by=s.y-fy*8;
+      roboLeg(bx,by,[bx+Math.cos(a)*18,by+Math.sin(a)*18,bx+Math.cos(a-sy*.1)*36,by+Math.sin(a-sy*.1)*36],d.legc,2.2)}
+  }
+  };
+  if(mil)drawLegs();   // milpiés: patas cortas por debajo del cuerpo
+  // cuerpo
+  for(let i=n-1;i>=0;i--){
+    const s=segs[i],f=i/n,active=i>=base-1;
+    ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.a);
+    ctx.shadowColor=GL();ctx.shadowBlur=6;
+    if(mil){                                        // anillos cilíndricos
+      const r=(i===0?8.5:7.8)*(1-f*.2);
+      ctx.fillStyle=metal(r*1.3,d.hue,d.sat);ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.fill();
+      ctx.shadowBlur=0;ctx.strokeStyle='#0b0e12';ctx.lineWidth=1.3;ctx.stroke();
+      ctx.strokeStyle='#ffffff30';ctx.beginPath();ctx.arc(0,0,r*.65,-1.3,1.3);ctx.stroke();
+      if((i+Math.floor(t*7))%5===0)glowDot(0,0,1.7,g);   // luz que recorre el cuerpo
+      if(i===0){
+        glowDot(3,-3.5,1.8,g);glowDot(3,3.5,1.8,g);
+        ctx.strokeStyle='#cfd6df';ctx.lineWidth=1.3;
+        for(const sy of[-1,1]){let x=r-2,y=sy*3,a=sy*.4;ctx.beginPath();ctx.moveTo(x,y);for(let k=0;k<3;k++){a+=Math.sin(t*3+k+sy)*.35;x+=Math.cos(a)*6;y+=Math.sin(a)*6;ctx.lineTo(x,y)}ctx.stroke()}
+      }
+    }else{                                          // placas planas con bisel y tornillos
+      const w=(i===0?22:24)*(1-f*.18),h=(i===0?20:22)*(1-f*.3),hw=w/2;
+      ctx.fillStyle=metal(Math.max(w,h)*.8,d.hue,d.sat);rr(-hw,-h/2,w,h,5);ctx.fill();
+      ctx.shadowBlur=0;ctx.strokeStyle='#0b0e12';ctx.lineWidth=1.4;ctx.stroke();
+      ctx.strokeStyle='#ffffff2a';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-hw+3,-h/2+3);ctx.lineTo(hw-3,-h/2+3);ctx.stroke();
+      ctx.fillStyle='#39424f';for(const sy of[-1,1])for(const sx of[-1,1]){ctx.beginPath();ctx.arc(sx*(hw-4),sy*(h/2-4),1.4,0,7);ctx.fill()}
+      ctx.fillStyle=active?g:g+'55';ctx.fillRect(-hw*.4,-1.2,hw*.8,2.4);
+      if(i===0){
+        glowDot(hw*.3,-5,2.6,g);glowDot(hw*.3,5,2.6,g);
+        const op=.25+.2*Math.sin(t*4);ctx.strokeStyle=d.legc;ctx.lineWidth=3;
+        for(const sy of[-1,1]){ctx.beginPath();ctx.moveTo(hw-2,sy*4);ctx.quadraticCurveTo(hw+8,sy*(8-op*8),hw+14,sy*(2+op*3));ctx.stroke()}
+        ctx.strokeStyle='#cfd6df';ctx.lineWidth=1.5;
+        for(const sy of[-1,1]){let x=hw-4,y=sy*6,a=sy*.5;ctx.beginPath();ctx.moveTo(x,y);for(let k=0;k<4;k++){a+=Math.sin(t*3+k+sy)*.35;x+=Math.cos(a)*9;y+=Math.sin(a)*9;ctx.lineTo(x,y)}ctx.stroke();glowDot(x,y,1.6,g)}
+      }
+    }
+    ctx.restore();
+  }
+  if(!mil)drawLegs();   // ciempiés: patas montadas sobre las placas (se ven al girar)
+}
+function drawAnt(){
+  const [hd,th,ab]=segs,ph=t*rate()*1.3;
+  const fx=Math.cos(th.a),fy=Math.sin(th.a);
+  // 6 patas en trípode, ancladas al tórax
+  for(let k=0;k<3;k++)for(const side of[-1,1]){
+    const nx=-Math.sin(th.a)*side,ny=Math.cos(th.a)*side,off=(1-k)*7;
+    const p=ph+((k+(side>0?1:0))%2?Math.PI:0);
+    leg(th.x+fx*off+nx*5,th.y+fy*off+ny*5,nx,ny,fx,fy,24-Math.abs(k-1)*2,p,D().legc,3);
+  }
+  const abR=14+Math.min(8,notes.length*.8);       // cada nota agranda el abdomen
+  const parts=[[ab,abR,1.35,'abd'],[th,9,1.2,'tor'],[hd,11.5,1,'hd']];
+  for(const [s,r,sx,kind] of parts){
+    ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.a);
+    ctx.shadowColor=GL();ctx.shadowBlur=7;
+    ctx.fillStyle=metal(r*1.4,D().hue,D().sat);
+    ctx.beginPath();ctx.ellipse(0,0,r*sx,r*(kind==='hd'?1.05:.9),0,0,7);ctx.fill();
+    ctx.shadowBlur=0;ctx.strokeStyle='#2a1c10';ctx.lineWidth=1.5;ctx.stroke();
+    if(kind==='abd'){ctx.strokeStyle='#ffffff40';for(let q=-1;q<=1;q++){ctx.beginPath();ctx.arc(q*r*.45,0,r*.7,-1.3,1.3);ctx.stroke()}
+      ctx.fillStyle='#7fd1ff';ctx.beginPath();ctx.arc(-r*.3,0,2.4+Math.sin(t*3)*.6,0,7);ctx.fill()}
+    if(kind==='hd'){
+      ctx.fillStyle='#10151b';for(const sy of[-1,1]){ctx.beginPath();ctx.ellipse(r*.35,sy*r*.55,3.4,2.6,0,0,7);ctx.fill()}
+      ctx.fillStyle='#7fd1ff';for(const sy of[-1,1]){ctx.beginPath();ctx.arc(r*.45,sy*r*.55,1,0,7);ctx.fill()}
+      ctx.strokeStyle='#8a5a30';ctx.lineWidth=2.2;
+      for(const sy of[-1,1]){ // mandíbulas
+        ctx.beginPath();ctx.moveTo(r*.9,sy*3);ctx.lineTo(r*1.35,sy*6);ctx.lineTo(r*1.5,sy*2);ctx.stroke();
+        const w=Math.sin(t*4+sy*2)*5; // antenas acodadas
+        ctx.beginPath();ctx.moveTo(r*.8,sy*5);ctx.lineTo(r*1.7,sy*9+w*.3);ctx.lineTo(r*2.5,sy*8+w);ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+}
+
+function drawMantis(){
+  const [hd,pr,ms,ab]=segs,ph=t*rate()*1.1;
+  const mfx=Math.cos(ms.a),mfy=Math.sin(ms.a);
+  for(let k=0;k<2;k++)for(const side of[-1,1]){      // 4 patas para caminar
+    const nx=-Math.sin(ms.a)*side,ny=Math.cos(ms.a)*side,off=k?-7:5;
+    leg(ms.x+mfx*off+nx*4,ms.y+mfy*off+ny*4,nx,ny,mfx,mfy,24,ph+((k+(side>0?1:0))%2?Math.PI:0),'#6f9a86',2.6);
+  }
+  const bands=Math.min(4,notes.length),B=ctx;
+  const part=(s,fn)=>{B.save();B.translate(s.x,s.y);B.rotate(s.a);fn();B.restore()};
+  const body=(rx,ry,hue,sat)=>{B.shadowColor=GL();B.shadowBlur=6;B.fillStyle=metal(Math.max(rx,ry)*1.2,hue,sat);
+    B.beginPath();B.ellipse(0,0,rx,ry,0,0,7);B.fill();B.shadowBlur=0;B.strokeStyle='#14221c';B.lineWidth=1.4;B.stroke()};
+  part(ab,()=>{body(23,8.5,D().hue,D().sat);
+    B.strokeStyle='#ffffff35';for(const sy of[-1,1]){B.beginPath();B.ellipse(-2,sy*3,18,3,0,0,7);B.stroke()}   // alas plegadas
+    for(let q=0;q<4;q++){B.fillStyle=q<bands?'#7fd1ff':'#2b3a33';B.fillRect(-14+q*8,-1.5,4,3)}});             // 1 banda por nota
+  part(ms,()=>body(9,6.5,D().hue,D().sat));
+  part(pr,()=>{body(18,6,D().hue,D().sat);
+    const k=Math.pow(Math.max(0,Math.sin(t*1.3)),12);               // ataque periódico
+    for(const sy of[-1,1]){
+      const bx=11,by=sy*5,E=[bx+19,by+sy*(8+2*k)],T=[bx+9+(30-9)*k,by+sy*(2+(10-2)*k)];
+      B.lineCap='round';B.lineJoin='round';
+      B.strokeStyle='#9fd0ba';B.lineWidth=4;B.beginPath();B.moveTo(bx,by);B.lineTo(E[0],E[1]);B.stroke();
+      B.lineWidth=3;B.beginPath();B.lineTo(E[0],E[1]);B.lineTo(T[0],T[1]);B.stroke();
+      B.strokeStyle='#14221c';B.lineWidth=.9;B.beginPath();B.moveTo(bx,by);B.lineTo(E[0],E[1]);B.lineTo(T[0],T[1]);B.stroke();
+      B.fillStyle='#cfd6df';for(let q=1;q<=3;q++){B.beginPath();B.arc(E[0]+(T[0]-E[0])*q/4,E[1]+(T[1]-E[1])*q/4-sy*1.8,1.4,0,7);B.fill()}
+    }});
+  part(hd,()=>{
+    B.shadowColor=GL();B.shadowBlur=6;B.fillStyle=metal(14,D().hue,D().sat);
+    B.beginPath();B.moveTo(12,0);B.quadraticCurveTo(0,-11,-8,-9);B.lineTo(-8,9);B.quadraticCurveTo(0,11,12,0);B.fill();
+    B.shadowBlur=0;B.strokeStyle='#14221c';B.lineWidth=1.4;B.stroke();
+    B.shadowColor='#7fd1ff';B.shadowBlur=8;B.fillStyle='#7fd1ff';
+    for(const sy of[-1,1]){B.beginPath();B.ellipse(-1,sy*8,3.8,3,0,0,7);B.fill()}
+    B.shadowBlur=0;B.strokeStyle='#9fd0ba';B.lineWidth=1.6;
+    for(const sy of[-1,1]){const w=Math.sin(t*3+sy)*4;B.beginPath();B.moveTo(9,sy*2);B.quadraticCurveTo(20,sy*8+w,32,sy*12+w*1.4);B.stroke()}
+  });
+}
+function drawBeetle(){
+  const [hd,th,el]=segs,ph=t*rate()*.9;
+  const fx=Math.cos(th.a),fy=Math.sin(th.a),B=ctx;
+  for(let k=0;k<3;k++)for(const side of[-1,1]){      // 6 patas robustas en trípode
+    const nx=-Math.sin(th.a)*side,ny=Math.cos(th.a)*side,off=(1-k)*8+(k===2?-4:0);
+    leg(th.x+fx*off+nx*6,th.y+fy*off+ny*6,nx,ny,fx,fy,24,ph+((k+(side>0?1:0))%2?Math.PI:0),'#46505e',3.8);
+  }
+  const part=(s,fn)=>{B.save();B.translate(s.x,s.y);B.rotate(s.a);fn();B.restore()};
+  const lit=Math.min(6,notes.length);
+  part(el,()=>{                                       // élitros (coraza)
+    B.shadowColor=GL();B.shadowBlur=8;B.fillStyle=metal(34,D().hue,D().sat);
+    B.beginPath();B.ellipse(0,0,27,19,0,0,7);B.fill();B.shadowBlur=0;B.strokeStyle='#0d1a20';B.lineWidth=1.6;B.stroke();
+    B.strokeStyle='#ffffff30';B.lineWidth=1.2;
+    for(const sy of[-1,1]){B.beginPath();B.ellipse(-2,sy*9.5,19,6.5,0,sy>0?Math.PI*1.05:Math.PI*.05,sy>0?Math.PI*1.95:Math.PI*.95);B.stroke()}
+    B.strokeStyle='#0d1a20';B.lineWidth=1.8;B.beginPath();B.moveTo(-27,0);B.lineTo(25,0);B.stroke();   // costura central
+    for(let q=0;q<6;q++){const on=q<lit;B.shadowColor='#7fd1ff';B.shadowBlur=on?7:0;B.fillStyle=on?'#7fd1ff':'#3a4652';B.beginPath();B.arc(-19+q*7.5,0,2.2,0,7);B.fill()}
+    B.shadowBlur=0;});
+  part(th,()=>{B.shadowColor=GL();B.shadowBlur=6;B.fillStyle=metal(15,D().hue,D().sat-14);
+    B.beginPath();B.ellipse(0,0,11,12.5,0,0,7);B.fill();B.shadowBlur=0;B.strokeStyle='#0d1a20';B.lineWidth=1.5;B.stroke();
+    B.strokeStyle='#ffffff40';B.beginPath();B.arc(0,0,7.5,-1.2,1.2);B.stroke()});
+  part(hd,()=>{
+    B.strokeStyle='#46505e';B.lineWidth=4;B.lineCap='round';B.beginPath();{const hs=D().horn==null?1:D().horn;if(hs>0){B.moveTo(5,0);B.lineTo(5+14*hs,0);B.moveTo(5+14*hs,0);B.lineTo(5+23*hs,-5*hs);B.moveTo(5+14*hs,0);B.lineTo(5+23*hs,5*hs);B.stroke()}}   // cuerno bifurcado
+    B.shadowColor=GL();B.shadowBlur=6;B.fillStyle=metal(11,D().hue,D().sat-14);
+    B.beginPath();B.ellipse(0,0,9,8.5,0,0,7);B.fill();B.shadowBlur=0;B.strokeStyle='#0d1a20';B.lineWidth=1.5;B.stroke();
+    B.fillStyle='#7fd1ff';for(const sy of[-1,1]){B.beginPath();B.arc(3,sy*5.5,1.8,0,7);B.fill()}
+    B.strokeStyle='#8a95a3';B.lineWidth=1.6;
+    for(const sy of[-1,1]){const w=Math.sin(t*3+sy)*2.5;B.beginPath();B.moveTo(6,sy*6);B.lineTo(14,sy*11+w);B.stroke();B.fillStyle='#8a95a3';B.beginPath();B.arc(14,sy*11+w,2.2,0,7);B.fill()}
+  });
+}
+
+const partAt=(s,fn)=>{ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.a);fn();ctx.restore()};
+const blob=(rx,ry,hue,sat,line='#111')=>{ctx.shadowColor=GL();ctx.shadowBlur=6;ctx.fillStyle=metal(Math.max(rx,ry)*1.25,hue,sat);ctx.beginPath();ctx.ellipse(0,0,rx,ry,0,0,7);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle=line;ctx.lineWidth=1.4;ctx.stroke();ctx.strokeStyle='#ffffff26';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(-rx*.12,-ry*.2,rx*.68,ry*.55,0,3.5,5.1);ctx.stroke()};
+const glowDot=(x,y,r,c)=>{ctx.shadowColor=c;ctx.shadowBlur=7;ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();ctx.shadowBlur=0;
+  if(r>=1.4){ctx.fillStyle='rgba(255,255,255,.8)';ctx.beginPath();ctx.arc(x-r*.3,y-r*.3,r*.28,0,7);ctx.fill()}};   // brillo en los ojos y luces
+function psk(){return (cfg.ps||.78)*((D()&&D().sc)||1)}
+function groundShadow(){                                  // sombra suave en el piso (más lejos y tenue en los que vuelan)
+  const fly=D().fam==='bee'||D().fam==='dragon';
+  ctx.save();ctx.fillStyle=fly?'rgba(0,0,0,.10)':'rgba(0,0,0,.20)';
+  const ox=fly?10:2,oy=fly?18:4;
+  for(let i=0;i<segs.length;i++){const s=segs[i],r=Math.max(6,(pet().space(Math.max(1,i))||20)*.55);ctx.beginPath();ctx.ellipse(s.x+ox,s.y+oy,r*1.05,r*.7,s.a,0,7);ctx.fill()}
+  ctx.restore();
+}
+const tripod=(s,offs,len,col,w,ph)=>{const fx=Math.cos(s.a),fy=Math.sin(s.a);offs.forEach((off,k)=>{for(const side of[-1,1]){const nx=-Math.sin(s.a)*side,ny=Math.cos(s.a)*side;leg(s.x+fx*off+nx*4,s.y+fy*off+ny*4,nx,ny,fx,fy,len,ph+((k+(side>0?1:0))%2?Math.PI:0),col,w)}})};
+
+// ---- Arañas: marcha con pies apoyados (sin patinar) ----
+let feet=null,feetKey='',gaitPh=0;
+function geo(hd,k,side,L,sz){                       // base de la pata y punto de reposo del pie, en el mundo
+  const fx=Math.cos(hd.a),fy=Math.sin(hd.a),dir=hd.a+side*(.9+k*.4),o=(3-k*2.2)*sz;
+  const bx=hd.x+fx*o,by=hd.y+fy*o;
+  return{bx,by,rx:bx+Math.cos(dir)*L*.8,ry:by+Math.sin(dir)*L*.8};
+}
+function stepFeet(hd,L,sz){
+  // Reloj de marcha: dos grupos de 4 patas (izq/der alternadas) que se turnan, igual que en una araña real.
+  const S=L*.5,sp=speed/psk(),walking=sp>10;
+  if(!feet||feetKey!==petKey){feet=[];feetKey=petKey;gaitPh=0;
+    for(let k=0;k<4;k++)for(const side of[-1,1]){const g=geo(hd,k,side,L,sz);feet.push({k,side,x:g.rx,y:g.ry,sx:g.rx,sy:g.ry,tx:g.rx,ty:g.ry,u:-1,dur:.1,grp:(k+(side>0?1:0))%2})}}
+  const prev=gaitPh;if(walking)gaitPh+=frameDt*sp/S;           // un ciclo completo = una zancada S
+  const dur=Math.min(.35*S/Math.max(sp,10),.25);                 // vuelo ≈ 35 % del ciclo, así los dos grupos nunca vuelan a la vez
+  const vx=Math.cos(hd.a),vy=Math.sin(hd.a);
+  for(const f of feet){
+    const g=geo(hd,f.k,f.side,L,sz);
+    if(f.u>=0){                                                  // pie en el aire
+      f.u+=frameDt/f.dur;
+      if(f.u>=1){f.u=-1;f.x=f.tx;f.y=f.ty}
+      else{const e=f.u*f.u*(3-2*f.u);f.x=f.sx+(f.tx-f.sx)*e;f.y=f.sy+(f.ty-f.sy)*e}
+      continue;
+    }
+    let go=walking&&Math.floor(gaitPh-f.grp*.5)>Math.floor(prev-f.grp*.5);   // grupo 0 en fase 0, grupo 1 en fase .5
+    if(!walking){                                                // sin avanzar: corrige pies lejanos (giros en el sitio), un grupo a la vez
+      const dd=Math.hypot(f.x-g.rx,f.y-g.ry);
+      if(dd>L*.28&&!feet.some(o=>o.u>=0&&o.grp!==f.grp))go=true;
+    }
+    if(go){const lead=walking?sp*dur+S/2:0;f.sx=f.x;f.sy=f.y;f.tx=g.rx+vx*lead;f.ty=g.ry+vy*lead;f.u=0;f.dur=walking?dur:.18}
+  }
+}
+function drawSpider(){
+  const [hd,ab]=segs,d=D(),sz=d.size||1,L=(d.leg||27)*sz,l=L*.62;
+  stepFeet(hd,L,sz);
+  for(const f of feet){                             // cinemática inversa de 2 eslabones
+    const g=geo(hd,f.k,f.side,L,sz);
+    let ex=f.x,ey=f.y,dx=ex-g.bx,dy=ey-g.by,dd=Math.hypot(dx,dy)||1;
+    if(dd>l*1.98){ex=g.bx+dx/dd*l*1.98;ey=g.by+dy/dd*l*1.98;dd=l*1.98}
+    const lift=f.u>=0?Math.sin(Math.PI*f.u):0;
+    const h=Math.sqrt(Math.max(0,l*l-dd*dd/4))*(d.arch||.5)*(1+.5*lift);
+    const sg=f.k<2?.25:-.25,Wx=Math.cos(hd.a)*sg-Math.sin(hd.a)*f.side,Wy=Math.sin(hd.a)*sg+Math.cos(hd.a)*f.side;   // rodillas siempre hacia afuera
+    let px=-dy/dd,py=dx/dd;if(px*Wx+py*Wy<0){px=-px;py=-py}
+    const kx=(g.bx+ex)/2+px*h,ky=(g.by+ey)/2+py*h;
+    roboLeg(g.bx,g.by,[kx,ky,ex,ey],d.legc,d.lw||2.4);
+    if(d.armor){ctx.strokeStyle=d.glow+'cc';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(kx,ky);ctx.lineTo(kx+(ex-kx)*.8,ky+(ey-ky)*.8);ctx.stroke()}   // banda roja en la tibia
+    if(lift>0)glowDot(ex,ey,1.8,d.glow);
+  }
+  partAt(ab,()=>{const rx=14*sz*(d.abx||1),ry=11.5*sz*(d.aby||1);blob(rx,ry,d.hue,d.sat);
+    if(d.hairy){ctx.strokeStyle=d.legc;ctx.lineWidth=1;for(let q=0;q<22;q++){const a=q/22*6.283;ctx.beginPath();ctx.moveTo(Math.cos(a)*rx,Math.sin(a)*ry);ctx.lineTo(Math.cos(a)*(rx+3),Math.sin(a)*(ry+3));ctx.stroke()}}
+    if(d.hourglass){ctx.fillStyle=d.glow;ctx.shadowColor=d.glow;ctx.shadowBlur=8;ctx.beginPath();ctx.moveTo(-6,-4);ctx.lineTo(0,0);ctx.lineTo(-6,4);ctx.closePath();ctx.moveTo(6,-4);ctx.lineTo(0,0);ctx.lineTo(6,4);ctx.closePath();ctx.fill();ctx.shadowBlur=0}
+    if(d.armor){                                    // placas transversales, núcleo rojo y franjas
+      ctx.strokeStyle='#05070a';ctx.lineWidth=1.2;
+      for(let q=-2;q<=2;q++){const x=q*rx*.34,e=ry*Math.sqrt(1-(q*.34)*(q*.34));ctx.beginPath();ctx.moveTo(x,-e);ctx.lineTo(x,e);ctx.stroke()}
+      const pu=.55+.45*Math.sin(t*3);
+      ctx.fillStyle=d.glow;ctx.shadowColor=d.glow;ctx.shadowBlur=3+8*pu;
+      ctx.beginPath();ctx.moveTo(-rx*.5,0);ctx.lineTo(0,-ry*.38);ctx.lineTo(rx*.5,0);ctx.lineTo(0,ry*.38);ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+      ctx.fillStyle=d.glow+'aa';for(const sy of[-1,1])ctx.fillRect(-rx*.6,sy*ry*.66-1,rx*1.1,2);
+    }
+    ctx.strokeStyle='#ffffff40';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(0,0,rx*.78,-1.15,-.35);ctx.stroke()});
+  partAt(hd,()=>{blob(9.5*sz,8.5*sz,d.hue,d.sat);
+    if(d.bigEyes){glowDot(5,-3.8,3.4,d.glow);glowDot(5,3.8,3.4,d.glow);glowDot(7.5,0,1.6,d.glow)}
+    else for(const sy of[-1,1]){glowDot(6*sz+1,sy*3*sz,1.5,d.glow);glowDot(4*sz+1,sy*5*sz,1.1,d.glow);glowDot(7.5*sz+1,sy*1.2*sz,1.1,d.glow)}
+    ctx.strokeStyle=d.armor?'#aab4c2':d.legc;ctx.lineWidth=2;ctx.lineCap='round';
+    for(const sy of[-1,1]){ctx.beginPath();ctx.moveTo(9*sz,sy*2.5*sz);ctx.lineTo(13.5*sz,sy*1.8*sz);ctx.stroke();if(d.armor)glowDot(13.5*sz,sy*1.8*sz,1.2,d.glow)}});
+}
+function drawBee(){
+  const [hd,th,ab]=segs,d=D(),ph=t*rate()*1.4,fl=Math.sin(t*70),dk='#16130b';
+  tripod(th,[5,0,-5],11,'#2b2b2b',2,ph);
+  partAt(th,()=>{ctx.fillStyle='rgba(190,225,255,.38)';ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=1;
+    for(const sy of[-1,1]){ctx.save();ctx.rotate(sy*(.45+Math.abs(fl)*.5));ctx.beginPath();ctx.ellipse(-5,sy*(d.slim?13:15),d.slim?10:13,d.slim?5:6.5,0,0,7);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(-5-(d.slim?8:11),sy*(d.slim?13:15));ctx.lineTo(-5+(d.slim?8:11),sy*(d.slim?13:15));ctx.stroke();ctx.restore()}});
+  partAt(ab,()=>{const ry=d.slim?7:10,rx=d.slim?17:15;
+    ctx.save();ctx.beginPath();ctx.ellipse(0,0,rx,ry,0,0,7);ctx.clip();
+    ctx.fillStyle=metal(rx*1.25,d.hue,d.sat);ctx.fillRect(-rx,-ry,rx*2,ry*2);
+    ctx.fillStyle=dk;for(let q=0;q<3;q++)ctx.fillRect(-rx*.55+q*rx*.5,-ry,rx*.22,ry*2);ctx.restore();
+    ctx.strokeStyle=dk;ctx.lineWidth=1.4;ctx.beginPath();ctx.ellipse(0,0,rx,ry,0,0,7);ctx.stroke();
+    ctx.fillStyle=dk;ctx.beginPath();ctx.moveTo(-rx,-2);ctx.lineTo(-rx-(d.slim?9:6),0);ctx.lineTo(-rx,2);ctx.fill()});
+  partAt(th,()=>{blob(9,9.5,d.hue,d.sat-10,dk);ctx.strokeStyle='#ffffff40';ctx.beginPath();ctx.arc(0,0,5.5,-1.2,1.2);ctx.stroke();ctx.strokeStyle=`hsla(${d.hue},70%,62%,.55)`;ctx.lineWidth=1.2;for(let q=0;q<16;q++){const a=q/16*6.283;ctx.beginPath();ctx.moveTo(Math.cos(a)*9,Math.sin(a)*9.5);ctx.lineTo(Math.cos(a)*12,Math.sin(a)*12.5);ctx.stroke()}});
+  partAt(hd,()=>{blob(7.5,7,30,10,dk);glowDot(3,-4,2.6,'#7fd1ff');glowDot(3,4,2.6,'#7fd1ff');
+    ctx.strokeStyle=dk;ctx.lineWidth=1.4;for(const sy of[-1,1]){const w=Math.sin(t*4+sy)*2;ctx.beginPath();ctx.moveTo(6,sy*2);ctx.quadraticCurveTo(12,sy*5+w,18,sy*7+w);ctx.stroke()}});
+}
+function drawLady(){
+  const [hd,bd]=segs,d=D(),ph=t*rate(),lit=Math.min(5,notes.length),spots=[[-8,-8],[-8,8],[2,-9],[2,9],[-14,0]];
+  tripod(bd,[6,0,-6],15,'#2a2a2a',2.4,ph);
+  partAt(bd,()=>{ctx.shadowColor=GL();ctx.shadowBlur=7;ctx.fillStyle=metal(24,d.hue,d.sat);ctx.beginPath();ctx.ellipse(0,0,18,15,0,0,7);ctx.fill();ctx.shadowBlur=0;
+    ctx.strokeStyle='#111';ctx.lineWidth=1.6;ctx.stroke();ctx.beginPath();ctx.moveTo(-18,0);ctx.lineTo(16,0);ctx.stroke();
+    spots.forEach((q,i)=>{if(i<lit)glowDot(q[0],q[1],3.4,'#7fd1ff');else{ctx.fillStyle='#161616';ctx.beginPath();ctx.arc(q[0],q[1],3.4,0,7);ctx.fill()}});
+    ctx.strokeStyle='#ffffff55';ctx.lineWidth=1.3;ctx.beginPath();ctx.arc(2,-6,8,3.6,4.8);ctx.stroke()});
+  partAt(hd,()=>{blob(8,7.5,220,6,'#0a0a0a');ctx.fillStyle='#eee';for(const sy of[-1,1]){ctx.beginPath();ctx.arc(3,sy*5,2.1,0,7);ctx.fill()}
+    ctx.strokeStyle='#222';ctx.lineWidth=1.3;for(const sy of[-1,1]){const w=Math.sin(t*4+sy)*2;ctx.beginPath();ctx.moveTo(7,sy*2);ctx.lineTo(14,sy*6+w);ctx.stroke()}});
+}
+function drawDragon(){
+  const d=D(),fl=Math.sin(t*38),hd=segs[0],th=segs[1];
+  tripod(th,[4,0,-4],10,'#2b3440',1.8,t*rate());
+  partAt(th,()=>{ctx.fillStyle=d.wing;ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=1;
+    for(const sy of[-1,1])for(const off of[5,-7]){ctx.save();ctx.translate(off,0);ctx.rotate(sy*(.12+(off>0?fl:-fl)*.12));ctx.beginPath();ctx.ellipse(0,sy*21,5.5,22,0,0,7);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(0,sy*42);ctx.stroke();ctx.restore()}});
+  for(let i=4;i>=2;i--)partAt(segs[i],()=>{blob(9.5,4.2-(i-2)*.5,d.hue,d.sat);ctx.fillStyle=d.glow;ctx.fillRect(-3,-1.5,2.5,3)});
+  partAt(th,()=>blob(10,7.5,d.hue,d.sat));
+  partAt(hd,()=>{blob(7,7,d.hue,d.sat);glowDot(3,-5,3.6,d.glow);glowDot(3,5,3.6,d.glow)});
+}
+function drawScorp(){
+  const [hd,a1,a2,a3]=segs,d=D(),ph=t*rate()*.9,fx=Math.cos(hd.a),fy=Math.sin(hd.a);
+  for(let k=0;k<4;k++)for(const side of[-1,1]){
+    const dir=hd.a+side*(1.2+k*.35);
+    leg(hd.x+fx*(3-k*4),hd.y+fy*(3-k*4),Math.cos(dir),Math.sin(dir),fx,fy,21,ph+((k+(side>0?1:0))%2?Math.PI:0),d.legc,2.4);
+  }
+  for(let i=3;i>=1;i--)partAt(segs[i],()=>{blob(10-i,8-i*.8,d.hue,d.sat);ctx.strokeStyle='#ffffff30';ctx.beginPath();ctx.arc(0,0,5,-1.2,1.2);ctx.stroke()});
+  partAt(a3,()=>{                                              // cola enroscada con aguijón
+    let x=-6,y=0,ang=Math.PI;const pts=[[x,y]];
+    for(let k=0;k<7;k++){ang+=.45+Math.sin(t*2+k*.6)*.05;x+=Math.cos(ang)*6;y+=Math.sin(ang)*6;pts.push([x,y])}
+    ctx.strokeStyle=d.legc;ctx.lineCap='round';
+    for(let k=1;k<pts.length;k++){ctx.lineWidth=6-k*.45;ctx.beginPath();ctx.moveTo(pts[k-1][0],pts[k-1][1]);ctx.lineTo(pts[k][0],pts[k][1]);ctx.stroke()}
+    const nx=-Math.sin(ang),ny=Math.cos(ang);ctx.fillStyle=d.glow;ctx.shadowColor=d.glow;ctx.shadowBlur=8;
+    ctx.beginPath();ctx.moveTo(x+nx*2.5,y+ny*2.5);ctx.lineTo(x+Math.cos(ang)*9,y+Math.sin(ang)*9);ctx.lineTo(x-nx*2.5,y-ny*2.5);ctx.fill();ctx.shadowBlur=0});
+  partAt(hd,()=>{blob(11,9.5,d.hue,d.sat);glowDot(4,-3,1.7,d.glow);glowDot(4,3,1.7,d.glow);
+    const op=.3+.25*Math.sin(t*3);ctx.strokeStyle=d.legc;ctx.lineWidth=3.2;ctx.lineCap='round';
+    for(const sy of[-1,1]){ctx.beginPath();ctx.moveTo(8,sy*5);ctx.lineTo(18,sy*9);ctx.moveTo(18,sy*9);ctx.lineTo(28,sy*(6-op*4));ctx.moveTo(18,sy*9);ctx.lineTo(28,sy*(12+op*4));ctx.stroke()}});
+}
+
+// ---------- Patas con piso para todas las mascotas (mismo método que la araña) ----------
+let gait=null;
+const HP=Math.PI/2;
+function slotGeo(s){
+  const g=segs[s.seg],ca=Math.cos(g.a),sa=Math.sin(g.a),dir=g.a+s.side*s.ang;
+  const bx=g.x+ca*s.off-sa*s.side*s.R,by=g.y+sa*s.off+ca*s.side*s.R;
+  return{bx,by,rx:bx+Math.cos(dir)*s.reach*.8,ry:by+Math.sin(dir)*s.reach*.8,ca,sa};
+}
+function walkLegs(slots,o){                       // o={S:zancada, sw:fracción de vuelo, trick:bool}
+  if(!gait||gait.key!==petKey)gait={key:petKey,ph:0,feet:[]};
+  const feet=gait.feet,sp=speed/psk(),walking=sp>10,prev=gait.ph;
+  while(feet.length<slots.length){const g=slotGeo(slots[feet.length]);feet.push({x:g.rx,y:g.ry,sx:g.rx,sy:g.ry,tx:g.rx,ty:g.ry,u:-1,dur:.1})}
+  feet.length=slots.length;
+  if(walking)gait.ph+=frameDt*sp/o.S;               // un ciclo = una zancada
+  const dur=Math.max(.04,Math.min(o.sw*o.S/Math.max(sp,10),.25));
+  let swinging=feet.filter(f=>f.u>=0).length;const swg=[0,0];slots.forEach((s,i)=>{if(feet[i].u>=0)swg[s.po>=.5?1:0]++});   // patas en el aire por grupo
+  const maxSw=Math.max(2,Math.ceil(feet.length*.4)),tw=o.trick?trickW():[0,0],wp=tw[0],wi=tw[1],ww=1-wp-wi,gl=D().glow||'#7fd1ff';
+  slots.forEach((s,i)=>{
+    const f=feet[i],g=slotGeo(s);
+    if(f.u>=0){                                     // pie en el aire
+      f.u+=frameDt/f.dur;
+      if(f.u>=1){f.u=-1;f.x=f.tx;f.y=f.ty;swinging--;swg[s.po>=.5?1:0]--}
+      else{const e=f.u*f.u*(3-2*f.u);f.x=f.sx+(f.tx-f.sx)*e;f.y=f.sy+(f.ty-f.sy)*e}
+    }else{                                          // pie apoyado: fijo en el suelo hasta que le toque su turno
+      const gr=s.po>=.5?1:0,blocked=o.block&&swg[1-gr]>0;               // los dos grupos nunca vuelan a la vez
+      let go=f.pend||(walking&&Math.floor(gait.ph-s.po)>Math.floor(prev-s.po));
+      if(!walking&&!f.pend&&swinging<maxSw&&!blocked&&Math.hypot(f.x-g.rx,f.y-g.ry)>s.reach*.28)go=true;   // sin avanzar: corrige giros en el sitio
+      if(go&&blocked){f.pend=true;go=false}
+      if(go){f.pend=false;swg[gr]++;const lead=walking?sp*dur+o.S/2:0;f.sx=f.x;f.sy=f.y;f.tx=g.rx+g.ca*lead;f.ty=g.ry+g.sa*lead;f.u=0;f.dur=walking?dur:.18;swinging++}
+    }
+    const l=s.reach*.62;let ex=f.x,ey=f.y,dx=ex-g.bx,dy=ey-g.by,dd=Math.hypot(dx,dy)||1;   // cinemática inversa de 2 eslabones
+    if(dd>l*1.98){ex=g.bx+dx/dd*l*1.98;ey=g.by+dy/dd*l*1.98;dd=l*1.98}
+    const lift=f.u>=0?Math.sin(Math.PI*f.u):0,h=Math.sqrt(Math.max(0,l*l-dd*dd/4))*(s.arch||.5)*(1+.5*lift);
+    const Wx=g.ca*s.fb-g.sa*s.side,Wy=g.sa*s.fb+g.ca*s.side;
+    let px=-dy/dd,py=dx/dd;if(px*Wx+py*Wy<0){px=-px;py=-py}                                // rodillas hacia afuera
+    let k=[(g.bx+ex)/2+px*h,(g.by+ey)/2+py*h,ex,ey];
+    if(wp>0||wi>0){                                 // movimientos "imposibles" del ciempiés y el milpiés
+      const nx=-g.sa*s.side,ny=g.ca*s.side,ang=t*7+s.seg*.4+(s.q||0)*.8+(s.side>0?Math.PI:0),cx=Math.cos(ang),cy=Math.sin(ang),len=s.reach;
+      const prop=[g.bx+cx*len*.55,g.by+cy*len*.55,g.bx+cx*len*1.1,g.by+cy*len*1.1],ext=len*(1+.75*Math.sin(t*5+s.seg*.5+(s.q||0))),pis=[g.bx+nx*ext*.5,g.by+ny*ext*.5,g.bx+nx*ext,g.by+ny*ext];
+      k=k.map((v,j)=>v*ww+prop[j]*wp+pis[j]*wi);
+    }
+    roboLeg(g.bx,g.by,k,s.col,s.w);
+    if(lift>0)glowDot(ex,ey,Math.max(1,s.w*.5),gl);
+  });
+}
+const hexSlots=(seg,offs,angs,reach,w,col,R)=>{const out=[];offs.forEach((off,k)=>{for(const side of[-1,1])out.push({seg,off,side,ang:angs[k],reach:Array.isArray(reach)?reach[k]:reach,R,w,col,po:((k+(side>0?1:0))%2)*.5,fb:k===0?.3:k===offs.length-1?-.3:.1})});return out};
+const mute=fn=>{legsMuted=true;try{fn()}finally{legsMuted=false}};
+function tuck(seg,offs,len,col,w){                 // insectos voladores: patas recogidas, sin piso
+  const g=segs[seg],ca=Math.cos(g.a),sa=Math.sin(g.a);
+  offs.forEach((off,k)=>{for(const side of[-1,1]){
+    const bx=g.x+ca*off-sa*side*4,by=g.y+sa*off+ca*side*4,sw=Math.sin(t*3+k*1.3+(side>0?1.7:0))*.12,nx=-sa*side,ny=ca*side;
+    roboLeg(bx,by,[bx+nx*len*.5+ca*len*(.1+sw),by+ny*len*.5+sa*len*(.1+sw),bx+nx*len*.3+ca*len*(.7+sw),by+ny*len*.3+sa*len*(.7+sw)],col,w);
+  }});
+}
+function wAnt(){walkLegs(hexSlots(1,[7,0,-7],[HP-.45,HP,HP+.45],[22,24,22],3,D().legc,5),{S:12,sw:.4,block:true});mute(drawAnt)}
+function wBeetle(){walkLegs(hexSlots(1,[8,0,-12],[HP-.45,HP,HP+.45],24,3.8,'#46505e',6),{S:12,sw:.4,block:true});mute(drawBeetle)}
+function wMantis(){walkLegs(hexSlots(2,[5,-7],[HP-.2,HP+.2],24,2.6,'#6f9a86',4),{S:12,sw:.4,block:true});mute(drawMantis)}
+function wLady(){walkLegs(hexSlots(1,[6,0,-6],[HP-.45,HP,HP+.45],15,2.4,'#2a2a2a',4),{S:7.5,sw:.4,block:true});mute(drawLady)}
+function wScorp(){const sl=[];for(let k=0;k<4;k++)for(const side of[-1,1])sl.push({seg:0,off:3-k*4,side,ang:1.2+k*.35,reach:21,R:0,w:2.4,col:D().legc,po:((k+(side>0?1:0))%2)*.5,fb:k<2?.25:-.25});walkLegs(sl,{S:10.5,sw:.35,block:true});mute(drawScorp)}
+function wBee(){tuck(1,[5,0,-5],11,'#2b2b2b',2);mute(drawBee)}
+function wDragon(){tuck(1,[4,0,-4],10,'#2b3440',1.8);mute(drawDragon)}
+function wCenti(){
+  const d=D(),mil=!!d.mil,n=segs.length,base=d.n||12,sl=[];
+  for(let i=0;i<n;i++){
+    const f=i/n,reach=(d.leg||22)*1.1*(1-f*.28)*(i===0?.6:1),col=i>=base-1?d.glow:d.legc;
+    for(const side of[-1,1])for(let q=0;q<(mil?2:1);q++)
+      sl.push({seg:i,q,off:mil?(q?-3.5:3.5):0,side,ang:HP+(mil?(q?.12:-.12):0),reach,R:mil?7:11,w:mil?2:3.2,col,po:((mil?i*.06+q*.25:i*.08)+(side>0?.5:0))%1,fb:.25,arch:.4});   // ola: cada pata va un poco desfasada de la anterior
+  }
+  const legs=()=>{
+    walkLegs(sl,{S:(d.leg||22)*(mil?.6:.55),sw:.3,trick:true});
+    if(!mil){const s=segs[n-1],fx=Math.cos(s.a),fy=Math.sin(s.a);                  // patas traseras largas
+      for(const sy of[-1,1]){const a=s.a+Math.PI+sy*(.18+Math.sin(t*3+sy)*.25),bx=s.x-fx*8,by=s.y-fy*8;
+        roboLeg(bx,by,[bx+Math.cos(a)*18,by+Math.sin(a)*18,bx+Math.cos(a-sy*.1)*36,by+Math.sin(a-sy*.1)*36],d.legc,2.2)}}
+  };
+  if(mil){legs();mute(drawCentipede)}else{mute(drawCentipede);legs()}
+}
+
+// ---------- Menú en la cabeza, burbuja y panel ----------
+const mbs=[...document.querySelectorAll('.mb')],bubble=document.getElementById('bubble'),panel=document.getElementById('panel');
+function layoutUI(){
+  const h=HS,up=h.y>160;
+  if(menuOpen){
+    const ang=(up?[-185,-155,-125,-95,-65,-35,-5]:[185,155,125,95,65,35,5]);
+    mbs.forEach((b,i)=>{
+      const r=104,a=ang[i]*Math.PI/180;
+      const x=Math.max(32,Math.min(W-32,h.x+Math.cos(a)*r)),y=Math.max(32,Math.min(H-32,h.y+Math.sin(a)*r));
+      b.style.transform=`translate(${x-26}px,${y-26}px)`;
+    });
+  }
+  if(bubble.style.display==='block'){
+    const half=Math.min(130,W*.4),x=Math.max(half,Math.min(W-half,h.x));
+    bubble.style.transform=up?`translate(${x}px,${h.y-48}px) translate(-50%,-100%)`:`translate(${x}px,${h.y+40}px) translate(-50%,0)`;
+  }
+  if(thoughtOn){const half=Math.min(115,W*.35),tx=Math.max(half,Math.min(W-half,h.x+50));
+    thought.className=up?'up':'down';
+    thought.style.transform=up?`translate(${tx}px,${h.y-58}px) translate(-50%,-100%)`:`translate(${tx}px,${h.y+48}px) translate(-50%,0)`}
+}
+function refreshUI(){
+  mbs.forEach(b=>b.style.display=menuOpen?'flex':'none');
+  if(menuOpen){bubble.style.display='none';hideThought()}
+}
+let bt,bubbleOn=false;
+function say(msg,ms=4000){hideThought();bubble.textContent=msg;bubbleOn=true;if(!menuOpen)bubble.style.display='block';clearTimeout(bt);if(ms)bt=setTimeout(hideBubble,ms)}
+function hideBubble(){bubbleOn=false;bubble.style.display='none'}
+// pensamientos: globo de nubecita, distinto al de hablar
+const thought=document.getElementById('thought');
+let tt,thoughtOn=false,lastTh='';
+function think(msg,ms=4200){if(bubbleOn||panelOpen||menuOpen)return;thought.textContent='💭 '+msg;thoughtOn=true;thought.style.display='block';clearTimeout(tt);tt=setTimeout(hideThought,ms)}
+function hideThought(){thoughtOn=false;thought.style.display='none'}
+document.getElementById('menu').addEventListener('click',e=>{
+  const b=e.target.closest('.mb');if(!b)return;
+  menuOpen=false;refreshUI();openPanel(b.dataset.t);
+});
+function openPanel(tab){
+  panelOpen=true;panel.className=HS.y<H/2?'bot':'top';panel.style.display='block';
+  if(tab==='notas')viewNotes();else if(tab==='buscar')viewSearch();else if(tab==='evento')viewEvent();else if(tab==='tiempo')vTiempo();else if(tab==='config')vSettings();else if(tab==='web')viewWeb();else if(tab==='perfil')vProfile(true);else viewPets();
+}
+function closePanel(){panelOpen=false;panel.style.display='none';hideBubble();if(wizOnClose){const f=wizOnClose;wizOnClose=null;f()}}
+const head=(title)=>`<h3><span>${title}</span><button id="x" aria-label="Cerrar">✕</button></h3>`;
+const wireClose=()=>panel.querySelector('#x').onclick=closePanel;
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hl=(txt,q)=>{const e=esc(txt);if(!q)return e;const re=new RegExp('('+esc(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');return e.replace(re,'<mark>$1</mark>')};
+
+function viewNotes(){
+  panel.innerHTML=head('📝 Notas')+`<textarea id="nt" rows="3" placeholder="Escribe una nota…"></textarea>
+  <button id="add">Guardar nota</button><p class="mut">Cada nota me hace crecer un poco 🙂</p><div id="list"></div>`;
+  wireClose();
+  const list=panel.querySelector('#list');
+  const paint=()=>{list.innerHTML=notes.map((n,i)=>`<div class="note"><span>${esc(n)}</span><button data-d="${i}">✕</button></div>`).join('')||'<p class="mut">Aún no hay notas.</p>'};
+  paint();
+  panel.querySelector('#add').onclick=()=>{const v=panel.querySelector('#nt').value.trim();if(!v)return;notes.unshift(v);store.set('notes',notes);panel.querySelector('#nt').value='';paint();say('Nota guardada 📝');setTimeout(()=>thinkEv('note'),4800)};
+  list.onclick=e=>{const d=e.target.dataset.d;if(d===undefined)return;notes.splice(+d,1);store.set('notes',notes);paint()};
+}
+function viewSearch(){
+  panel.innerHTML=head('🔍 Buscar palabra')+`<input id="q" placeholder="Palabra o frase…" autocomplete="off">
+  <div id="res"></div><button id="web" style="margin-top:8px">Buscar también en la web</button>`;
+  wireClose();
+  const q=panel.querySelector('#q'),res=panel.querySelector('#res');
+  q.oninput=()=>{const v=q.value.trim();
+    const m=v?notes.filter(n=>n.toLowerCase().includes(v.toLowerCase())):[];
+    res.innerHTML=v?(m.length?m.map(n=>`<div class="note"><span>${hl(n,v)}</span></div>`).join(''):'<p class="mut">Sin coincidencias en tus notas.</p>'):''};
+  panel.querySelector('#web').onclick=()=>{const v=q.value.trim();if(v)window.open('https://www.google.com/search?q='+encodeURIComponent(v),'_blank','noopener')};
+  q.focus();
+}
+const baseSteps=[
+  {k:'title',q:'¿Cómo se llama el evento?',type:'text'},
+  {k:'date',q:'¿Qué día es?',type:'date'},
+  {k:'time',q:'¿A qué hora empieza?',type:'time'},
+  {k:'mins',q:'¿Cuántos minutos dura?',type:'number',def:60},
+  {k:'vc',q:'¿Será por videollamada?',type:'select',optional:1,opts:[['','No (presencial o sin enlace)'],['meet','Sí, con Google Meet'],['zoom','Sí, con Zoom'],['otro','Sí, con otro enlace']]},
+];
+const linkStep={k:'link',q:'Pega aquí el enlace de la reunión (puedes crearlo con el botón de abajo).',type:'text',optional:1,vcHelp:1};
+const guestStep={k:'guests',q:'¿A quién invitas? Escribe correos separados por coma (opcional).',type:'text',optional:1};
+const proSteps=[
+  {k:'rep',q:'⭐ ¿Se repite?',type:'select',optional:1,opts:[['','No'],['DAILY','Cada día'],['WEEKLY','Cada semana'],['MONTHLY','Cada mes']]},
+  {k:'rem',q:'⭐ ¿Cuántos minutos antes te recuerdo?',type:'number',def:10},
+];
+const stepList=()=>[...baseSteps,...(ev.vc?[linkStep]:[]),guestStep,...(proOn?proSteps:[])];
+let ev={},si=0;
+function viewEvent(){ev={};si=0;ask()}
+function ask(){
+  const L=stepList(),s=L[si];
+  const field=s.type==='select'?`<select id="a">${s.opts.map(o=>`<option value="${o[0]}" ${ev[s.k]===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>`:`<input id="a" type="${s.type}" ${s.def?`value="${s.def}"`:''} ${s.k==='link'?'placeholder="https://…"':''}>`;
+  let help='';
+  if(s.vcHelp)help=ev.vc==='meet'?'<button id="mk">➕ Crear sala de Google Meet</button><p class="mut">Se abrirá Meet en otra pestaña: copia el enlace de la reunión y pégalo aquí.</p>':ev.vc==='zoom'?'<button id="mk">➕ Abrir Zoom para programar</button><p class="mut">Inicia sesión en Zoom, programa la reunión, copia el enlace y pégalo aquí.</p>':'';
+  panel.innerHTML=head(`📅 Nuevo evento (${si+1}/${L.length})`)+`<p>${s.q}</p>${field}${help}<button id="ok">${si+1<L.length?'Siguiente':'Crear'}</button>`;
+  wireClose();say(s.q,0);
+  const inp=panel.querySelector('#a');inp.focus();
+  const mk=panel.querySelector('#mk');if(mk)mk.onclick=()=>window.open(ev.vc==='meet'?'https://meet.google.com/new':'https://zoom.us/meeting/schedule','_blank','noopener');
+  const go=()=>{
+    const v=inp.value.trim();if(!v&&!s.optional)return;
+    if(s.k==='link'&&v&&!/^https?:\/\/\S+$/i.test(v)){say('El enlace debe empezar con https://',3500);return}
+    if(s.k==='guests'&&v){const bad=v.split(',').map(x=>x.trim()).filter(x=>x&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));if(bad.length){say('Revisa estos correos: '+bad.join(', '),4500);return}}
+    ev[s.k]=v;si++;si<stepList().length?ask():finish();
+  };
+  panel.querySelector('#ok').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go()};
+}
+const pad=n=>String(n).padStart(2,'0');
+const fmt=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+function finish(){
+  const st=new Date(`${ev.date}T${ev.time}`),en=new Date(st.getTime()+(+ev.mins||60)*60000);
+  const link=ev.link||'',vcName={meet:'Google Meet',zoom:'Zoom',otro:'Videollamada'}[ev.vc]||'';
+  const details=link?`${vcName||'Videollamada'}: ${link}`:ev.vc==='meet'?'Reunión por Google Meet: en Google Calendar toca «Agregar videoconferencia de Google Meet».':'';
+  const guests=(ev.guests||'').split(',').map(x=>x.trim()).filter(Boolean);
+  let gcal='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(ev.title)+'&dates='+fmt(st)+'/'+fmt(en)+(ev.rep?'&recur='+encodeURIComponent('RRULE:FREQ='+ev.rep):'');
+  if(link)gcal+='&location='+encodeURIComponent(link);
+  if(details)gcal+='&details='+encodeURIComponent(details);
+  if(guests.length)gcal+='&add='+encodeURIComponent(guests.join(','));
+  const ie=t=>String(t).replace(/\\/g,'\\\\').replace(/[,;]/g,m=>'\\'+m).replace(/\n/g,'\\n');
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//mascota//ES','BEGIN:VEVENT','UID:'+Date.now()+'@mascota','DTSTAMP:'+stamp,'DTSTART:'+fmt(st),'DTEND:'+fmt(en),'SUMMARY:'+ie(ev.title),
+    ...(link?['LOCATION:'+ie(link),'DESCRIPTION:'+ie(details),'URL:'+link]:details?['DESCRIPTION:'+ie(details)]:[]),
+    ...guests.map(g=>'ATTENDEE;RSVP=TRUE:mailto:'+g),
+    ...(ev.rep?['RRULE:FREQ='+ev.rep]:[]),...(ev.rem?['BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Recordatorio','TRIGGER:-PT'+(+ev.rem||10)+'M','END:VALARM']:[]),'END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const url=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));
+  const inv=[ev.title,'📅 '+st.toLocaleString([],{dateStyle:'full',timeStyle:'short'}),link?'🎥 '+(vcName||'Videollamada')+': '+link:''].filter(Boolean).join('\n');
+  panel.innerHTML=head('✅ ¡Listo!')+`<p><b>${esc(ev.title)}</b><br><span class="mut">${st.toLocaleString()}</span>${link?`<br>🎥 <a class="lnk" href="${esc(link)}" target="_blank" rel="noopener">${esc(vcName||'Videollamada')}</a>`:''}${guests.length?`<br><span class="mut">Invitados: ${esc(guests.join(', '))}</span>`:''}</p>
+  <p><button id="g">Añadir a Google Calendar</button></p>
+  <p><button id="cp">📋 Copiar invitación</button> <button id="wa">💬 WhatsApp</button></p>
+  <p><a download="evento.ics" href="${url}" class="lnk">Descargar .ics (Apple/Outlook)</a></p>`;
+  wireClose();say(tx('¡Evento listo! Confírmalo en tu calendario 📅','¡Listo, pata! Confírmalo en tu calendario 📅','Evento preparado, boss. Confírmelo en su calendario.'),5000);
+  panel.querySelector('#g').onclick=()=>window.open(gcal,'_blank','noopener');
+  panel.querySelector('#cp').onclick=()=>{try{navigator.clipboard.writeText(inv).then(()=>say('Invitación copiada ✅',3000),()=>say('No pude copiar: selecciona el texto manualmente.',3500))}catch(e){say('No pude copiar.',3000)}};
+  panel.querySelector('#wa').onclick=()=>window.open('https://wa.me/?text='+encodeURIComponent(inv),'_blank','noopener');
+  ev._gcal=gcal;ev._ics=ics;
+  try{store.set('events',[...store.get('events',[]).filter(e=>e.ts>Date.now()-864e5),{title:ev.title,ts:st.getTime()}].slice(-30))}catch(e){}
+}
+
+// ---------- Mascotas y tienda (vista previa Freemium) ----------
+function switchPet(id){
+  if(id===petKey)return;
+  petKey=id;store.set('pet',petKey);feet=null;gait=null;
+  const h=segs[0];initSegs(HS.x,HS.y,h.a);
+  say(`¡Ahora soy ${DEF[id].name.toLowerCase()}! ${DEF[id].ic}`,2500);setTimeout(()=>thinkEv('newpet'),5200);
+}
+const isOpen=id=>DEF[id].free||proOn;
+function chip(id){
+  const p=DEF[id],open=isOpen(id),on=open&&id===petKey;
+  return `<span class="cw"><button class="chip ${on?'on':''} ${open?'':'lock'}" data-id="${id}">${p.ic} ${E(p.name)}${p.free?'':' <span class="pro">PRO</span>'}${open?'':' 🔒 '+PRICE[p.p][0]}${on?' ✅':''}</button>${open?`<button class="ed" data-e="${id}" title="Editar esta mascota">✏️</button>`:''}</span>`;
+}
+const proExplain=()=>`<p class="mut"><b>¿Qué es Pro?</b> Es la parte de pago de la app (por ahora simulada): mascotas Pro (S/ 1 a S/ 3) y eventos avanzados con repetición y recordatorio. Este botón solo enciende o apaga el <b>modo de prueba</b> para que puedas probar todo; no cobra nada.</p>`;
+const proBtn=()=>`<button id="pro" class="${proOn?'on':''}">💎 Pro: ${proOn?'ACTIVADO (modo prueba) · pulsa para desactivar':'desactivado · pulsa para activar y probar todo'}</button>`;
+function wirePro(rerender){
+  panel.querySelector('#pro').onclick=()=>{
+    proOn=!proOn;store.set('pro',proOn);
+    if(!proOn&&!DEF[petKey].free)switchPet('ciempies');
+    refreshUI();rerender();
+  };
+}
+function viewPets(){
+  const mine=Object.keys(DEF).filter(id=>DEF[id].custom&&id!=='custom');
+  panel.innerHTML=head('🐾 Mascotas')+proBtn()+'<p class="mut">Las etiquetas PRO marcan lo que es de pago (S/ 1 a S/ 3). Toca ✏️ para editar cualquier mascota a tu gusto.</p><button id="mk">✨ Crear una mascota nueva</button>'
+    +(mine.length?'<p class="mut">⭐ Mis mascotas</p><div class="chips">'+mine.map(chip).join('')+'</div>':'')
+    +FAMS.map(([f,ic,nm])=>`<p class="mut">${ic} ${nm}</p><div class="chips">${Object.keys(DEF).filter(id=>DEF[id].fam===f&&!DEF[id].custom).map(chip).join('')}</div>`).join('');
+  wireClose();wirePro(viewPets);$('#mk').onclick=()=>startCreator();
+  panel.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const id=c.dataset.id;if(isOpen(id)){switchPet(id);viewPets()}else viewLocked(id)});
+  panel.querySelectorAll('.ed').forEach(b=>b.onclick=()=>startCreator(b.dataset.e));
+}
+function viewLocked(id){
+  const p=DEF[id],pr=PRICE[p.p];
+  panel.innerHTML=head('🔒 '+p.name)+`<div class="card lock"><div class="ic">${p.ic}</div><div class="tx"><b>${pr[0]}</b> <span class="mut">${pr[1]}</span><small>Mascota Pro</small></div></div>
+  <p class="mut">Vista previa: los pagos aún no están activados.</p>
+  <button id="buy">🔒 Desbloquear · ${pr[0]}</button> <button id="act">⭐ Activar Pro (modo prueba)</button> <button id="back">Volver</button>`;
+  wireClose();
+  panel.querySelector('#buy').onclick=()=>say('Los pagos aún no están activados: es una vista previa 🔒',3500);
+  panel.querySelector('#act').onclick=()=>{proOn=true;store.set('pro',true);refreshUI();switchPet(id);viewPets()};
+  panel.querySelector('#back').onclick=viewPets;
+}
+// ---------- Perfil, conexión a internet y servicios web ----------
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const E=x=>esc(String(x==null?'':x));
+let prof=store.get('prof',null),online=null,viewTok=0,wtab='hoy',loc=store.get('loc',null);
+const CLAVES=window.CLAVES||{};   // claves de la app: se editan en claves.js, no se piden al usuario
+let cfg={sprov:CLAVES.buscador||'tavily',keys:{tavily:CLAVES.tavily||'',serper:CLAVES.serper||'',exa:CLAVES.exa||'',jina:CLAVES.jina||''},proxy:(CLAVES.servidor||'').trim().replace(/\/+$/,''),nasa:CLAVES.nasa||'',webth:true,ps:.78};
+{const sv=store.get('cfg',{});if(sv.webth===false)cfg.webth=false;if(typeof sv.ps==='number')cfg.ps=Math.max(.5,Math.min(1.3,sv.ps))}
+const saveCfg=()=>store.set('cfg',{webth:cfg.webth,ps:cfg.ps});
+if(prof&&!prof.style)prof.style='b';
+if(prof&&prof.style==='b'&&!prof.gender)prof.gender='m';
+// estilos de trato: n = por nombre · a = amigo (jerga peruana y bromas) · b = boss (jefe/señor o jefa/Ma'am/madame)
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const styleKey=()=>(prof&&prof.style)||'n';
+const nm=()=>(prof&&prof.name)||'';
+const tx=(n,a,b)=>({n,a,b})[styleKey()];
+const HON={m:['jefe','señor'],f:['jefa',"Ma'am",'madame']};
+const vocat=()=>{const k=styleKey();return k==='a'?pick(['causa','pata','amigo','bróder']):k==='b'?pick(HON[prof.gender==='f'?'f':'m']):(nm()||'amigo')};
+const addrFull=()=>styleKey()==='b'?`${vocat()} ${nm()}`:nm();
+const sorry=()=>tx('Lo siento','Uy','Disculpe');
+const greet=()=>{const h=new Date().getHours();return h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches'};
+const sayW=async(m,ms)=>{ms=ms||Math.min(12000,2400+m.length*55);say(m,ms);await sleep(ms+250)};
+const MS={
+ n:{netOk:()=>'Conexión a internet establecida.',netOff:()=>'No detecto conexión a internet. Trabajaré sin conexión por ahora.',
+    netBlocked:()=>'Tengo red, pero no logro conectarme a los servicios en línea (puede que este entorno los bloquee).',
+    hello:g=>`${g}, ${nm()}. Qué bueno verte de nuevo.`,welcome:()=>`Encantado de conocerte, ${nm()}. Toca mi cabeza cuando quieras y dime qué necesitas.`,
+    perm:()=>'Con tu permiso, consultaré tu ubicación para decirte el clima.',
+    weather:w=>`${nm()}, ${w.ic} ahora hay ${w.t} °C con ${w.desc.toLowerCase()}. Hoy: máxima ${w.max}° y mínima ${w.min}°, probabilidad de lluvia ${w.pp} %.`,
+    coords:li=>`📍 Ubicación ${li.q}: ${li.txt} (${li.prec}).`,noWeather:()=>'No pude obtener el clima. Puedes indicarme tu ciudad en 🌐 Web → Hoy.',
+    holToday:n=>`Hoy es feriado: «${n}». ¡Que lo disfrutes!`,holNext:(n,d)=>`El próximo feriado es «${n}», dentro de ${d} días.`,
+    efem:t=>t,ready:()=>`Quedo a tu disposición, ${nm()}. Toca mi cabeza y abre 🌐 Web para preguntarme lo que quieras.`,
+    offNow:()=>'Se ha perdido la conexión a internet. Tus notas siguen disponibles.',backNow:()=>'La conexión a internet se ha restablecido.',
+    offStart:()=>'Sin conexión: tus notas y eventos siguen disponibles.'},
+ a:{netOk:()=>'¡Al toque! Ya hay internet, causa. 🚀',netOff:()=>'Uy, no hay internet, pata… modo offline pues. Tranqui, tus notas siguen acá.',
+    netBlocked:()=>'Hay red, pata, pero no puedo salir a los servicios… parece que este lugar me tiene encerrado. 😅',
+    hello:g=>`${g}, ${nm()}. ¡Habla, ${vocat()}! ¿Listo para chambear o primero un cafecito? ☕`,welcome:()=>`¡Bacán, ${nm()}! Ya somos patas. Toca mi cabeza cuando me necesites, ¿ya?`,
+    perm:()=>`Oe, ${vocat()}, ¿me das permiso pa' ver dónde estás y contarte el clima? Prometo no ser chismoso. 😄`,
+    weather:w=>`Mira, ${vocat()}: ${w.ic} hay ${w.t} °C y ${w.desc.toLowerCase()}. Máxima ${w.max}°, mínima ${w.min}°. ${w.pp>=50?'Lleva paraguas, que si no te mojas como pollito. ☔':w.t>=28?'Para un heladito, ¿no? 🍦':w.t<=14?'Abrígate bien pe, que hace frío. 🧥':"Clima chévere pa' chambear."}`,
+    coords:li=>`📍 Estás por aquí (${li.q}): ${li.txt} (${li.prec}).`,noWeather:()=>`Uy, no pude ver el clima, ${vocat()}. Dime tu ciudad en 🌐 Web → Hoy y lo vemos.`,
+    holToday:n=>`¡Feriado, ${vocat()}! Hoy toca «${n}». ¡A descansar, pues! 🎉`,holNext:(n,d)=>`Ojo, ${vocat()}: el próximo feriado es «${n}», en ${d} días. ¡Ya falta poquito!`,
+    efem:t=>`¿Sabías, ${vocat()}? ${t}`,ready:()=>`Aquí estoy pa' lo que gustes, ${vocat()}. Toca mi cabeza y abre 🌐 Web, pregúntame lo que quieras.`,
+    offNow:()=>`Uy, se cayó el internet, ${vocat()}. Tranqui, las notas siguen acá.`,backNow:()=>`¡Volvió el internet, ${vocat()}! Ya estamos al toque.`,
+    offStart:()=>`Sin internet, ${vocat()}, pero tus notas y eventos siguen acá, tranqui.`},
+ b:{netOk:()=>'Conexión a internet establecida.',netOff:()=>`No detecto conexión a internet, ${vocat()}. Trabajaré sin conexión por ahora.`,
+    netBlocked:()=>`Tengo red, ${vocat()}, pero no logro conectarme a los servicios en línea; es posible que este entorno los bloquee.`,
+    hello:g=>`${g}, ${addrFull()}. Es un placer tenerle de vuelta.`,welcome:()=>`Encantado de conocerle, ${addrFull()}. A partir de ahora me dirigiré a usted con el debido respeto.`,
+    perm:()=>`Con su permiso, ${vocat()}, consultaré su ubicación para informarle del clima.`,
+    weather:w=>`${vocat()}, ${w.ic} ahora hay ${w.t} °C con ${w.desc.toLowerCase()}. Hoy: máxima ${w.max}° y mínima ${w.min}°, probabilidad de lluvia ${w.pp} %.`,
+    coords:li=>`📍 Ubicación ${li.q}: ${li.txt} (${li.prec}).`,noWeather:()=>`No pude obtener el clima, ${vocat()}. Puede indicarme su ciudad en 🌐 Web → Hoy.`,
+    holToday:n=>`Hoy es feriado, ${vocat()}: «${n}». Que lo disfrute.`,holNext:(n,d)=>`El próximo feriado es «${n}», dentro de ${d} días, ${vocat()}.`,
+    efem:t=>`${vocat()}, un dato del día: ${t}`,ready:()=>`Quedo a su disposición, ${vocat()}. Toque mi cabeza y abra 🌐 Web para preguntarme lo que desee.`,
+    offNow:()=>`Disculpe, ${vocat()}: se ha perdido la conexión a internet. Sus notas siguen disponibles.`,backNow:()=>`${vocat()}, la conexión a internet se ha restablecido.`,
+    offStart:()=>`Sin conexión, ${vocat()}: sus notas y eventos siguen disponibles.`}
+};
+const M=(k,...a)=>MS[styleKey()][k](...a);
+
+async function jget(url,ms=9000,headers){
+  const c=new AbortController(),to=setTimeout(()=>c.abort(),ms);
+  try{const r=await fetch(url,{signal:c.signal,headers});if(!r.ok){const e=new Error('HTTP '+r.status);e.status=r.status;throw e}return await r.json()}
+  finally{clearTimeout(to)}
+}
+async function jpost(url,body,headers,ms=15000){
+  const c=new AbortController(),to=setTimeout(()=>c.abort(),ms);
+  try{const r=await fetch(url,{method:'POST',signal:c.signal,headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify(body)});if(!r.ok){const e=new Error('HTTP '+r.status);e.status=r.status;throw e}return await r.json()}
+  finally{clearTimeout(to)}
+}
+async function checkNet(){
+  if(typeof navigator!=='undefined'&&navigator.onLine===false)return false;
+  try{await Promise.any([jget('https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current=temperature_2m',6000),jget('https://openlibrary.org/search.json?q=a&limit=1&fields=key',6000)]);return true}catch(e){return false}
+}
+// --- ubicación: GPS (con precisión) o ciudad ---
+const getPos=()=>new Promise((ok,no)=>{if(!navigator.geolocation)return no(new Error('sin geolocalización'));
+  navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,src:'gps',ts:Date.now()}),no,{enableHighAccuracy:true,timeout:12000,maximumAge:120000})});
+const accTxt=a=>a<1000?`±${Math.round(a)} m`:`±${(a/1000).toFixed(1)} km`;
+function locInfo(l){                              // la calidad decide si la coordenada es exacta o referencial, y cuántos decimales se muestran
+  const city=l.src==='ciudad',a=city?5000:(l.acc||5000);
+  const q=city?'referencial (centro de la ciudad)':a<=100?'exacta':a<=1000?'aproximada':'referencial';
+  const dec=city?3:a<=20?5:a<=200?4:a<=2000?3:2;
+  return{q,txt:`${l.lat.toFixed(dec)}, ${l.lon.toFixed(dec)}`,prec:city?l.label:accTxt(a)};
+}
+async function ensureLoc(force){
+  if(!force&&loc&&(loc.src==='ciudad'||(loc.ts&&Date.now()-loc.ts<6*3600e3)))return loc;
+  try{loc=await getPos();store.set('loc',loc);return loc}catch(e){if(loc)return loc;throw e}
+}
+async function cityLoc(name){
+  const r=await jget(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=es&format=json`),x=r.results&&r.results[0];
+  if(!x)return null;
+  loc={lat:x.latitude,lon:x.longitude,src:'ciudad',label:[x.name,x.admin1,x.country].filter(Boolean).join(', '),ts:Date.now()};store.set('loc',loc);
+  if(x.country_code&&!store.get('ctry',null))store.set('ctry',x.country_code);
+  return loc;
+}
+// --- clima (Open-Meteo) ---
+const WMO={0:['Despejado','☀️'],1:['Mayormente despejado','🌤️'],2:['Parcialmente nublado','⛅'],3:['Nublado','☁️'],45:['Niebla','🌫️'],48:['Niebla con escarcha','🌫️'],51:['Llovizna ligera','🌦️'],53:['Llovizna','🌦️'],55:['Llovizna intensa','🌧️'],56:['Llovizna helada','🌧️'],57:['Llovizna helada intensa','🌧️'],61:['Lluvia ligera','🌧️'],63:['Lluvia','🌧️'],65:['Lluvia fuerte','🌧️'],66:['Lluvia helada','🌧️'],67:['Lluvia helada fuerte','🌧️'],71:['Nevada ligera','🌨️'],73:['Nevada','🌨️'],75:['Nevada fuerte','❄️'],77:['Granizo fino','🌨️'],80:['Chubascos ligeros','🌦️'],81:['Chubascos','🌧️'],82:['Chubascos violentos','⛈️'],85:['Chubascos de nieve','🌨️'],86:['Chubascos de nieve fuertes','🌨️'],95:['Tormenta','⛈️'],96:['Tormenta con granizo','⛈️'],99:['Tormenta fuerte con granizo','⛈️']};
+const wmo=c=>WMO[c]||['Condición variable','🌡️'];
+const getWeather=l=>jget(`https://api.open-meteo.com/v1/forecast?latitude=${l.lat}&longitude=${l.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1`);
+function fmtWeather(w){
+  const c=w.current||{},d=w.daily||{},[desc,ic]=wmo(c.weather_code),r=v=>v==null?'—':Math.round(v);
+  const f={desc,ic,t:r(c.temperature_2m),ap:r(c.apparent_temperature),hum:r(c.relative_humidity_2m),wind:r(c.wind_speed_10m),max:r(d.temperature_2m_max&&d.temperature_2m_max[0]),min:r(d.temperature_2m_min&&d.temperature_2m_min[0]),pp:r(d.precipitation_probability_max&&d.precipitation_probability_max[0])};
+  try{store.set('wx',{ts:Date.now(),t:f.t,desc:f.desc,pp:f.pp})}catch(e){}
+  return f;
+}
+// --- feriados (Nager.Date) ---
+const ctry=()=>store.get('ctry',null)||(()=>{try{return new Intl.Locale(navigator.language).region||null}catch(e){return null}})();
+const isoDay=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const daysTo=iso=>Math.round((new Date(iso+'T00:00:00')-new Date(isoDay(new Date())+'T00:00:00'))/864e5);
+async function holidays(cc){
+  const now=new Date(),y=now.getFullYear(),today=isoDay(now);
+  let list=await jget(`https://date.nager.at/api/v3/PublicHolidays/${y}/${cc}`);
+  const hit=list.find(h=>h.date===today);let next=list.find(h=>h.date>today);
+  if(!next){try{list=await jget(`https://date.nager.at/api/v3/PublicHolidays/${y+1}/${cc}`);next=list[0]}catch(e){}}
+  if(next){try{store.set('hol',{name:next.localName,date:next.date})}catch(e){}}
+  return{today:hit||null,next:next||null};
+}
+// --- dato del día: lo da tu buscador (si está conectado) ---
+const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+async function dayFact(){
+  const n=new Date(),day=isoDay(n),c=store.get('dfact',null);
+  if(c&&c.day===day&&c.t)return c.t;
+  if(!(cfg.keys[cfg.sprov]||cfg.proxy))return null;
+  try{const r=await webSearch(`hecho histórico importante ocurrido el ${n.getDate()} de ${MESES[n.getMonth()]}`);const a=r.answer||(r.res[0]&&r.res[0].snip);
+    if(a){const t=`Un ${n.getDate()} de ${MESES[n.getMonth()]}… ${clip(a,170)}`;store.set('dfact',{day,t});return t}}catch(e){}
+  return null;
+}
+// --- preguntas: buscadores web con plan gratuito (clave propia o servidor intermedio) ---
+const SPROV={tavily:'Tavily',serper:'Serper',exa:'Exa',jina:'Jina'};
+const clip=(t,n=150)=>{t=String(t==null?'':t).replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1).trimEnd()+'…':t};
+const strip=h=>String(h==null?'':h).replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").trim();
+const hostOf=u=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return u}};
+function parseSearch(p,j){
+  let answer='',res=[];
+  if(p==='tavily'){answer=j.answer||'';res=(j.results||[]).map(r=>({title:r.title,url:r.url,snip:r.content}))}
+  else if(p==='serper'){const a=j.answerBox;answer=a?(a.answer||a.snippet||''):'';if(!answer&&j.knowledgeGraph&&j.knowledgeGraph.description)answer=j.knowledgeGraph.description;res=(j.organic||[]).map(r=>({title:r.title,url:r.link,snip:r.snippet}))}
+  else if(p==='exa'){res=(j.results||[]).map(r=>({title:r.title,url:r.url,snip:r.text||(r.highlights||[]).join(' ')||r.summary}))}
+  else if(p==='jina'){res=(j.data||[]).map(r=>({title:r.title,url:r.url,snip:r.description||r.content}))}
+  return{answer,res:res.filter(r=>r.url).slice(0,5)};
+}
+async function webSearch(q){
+  const p=cfg.sprov,key=cfg.keys[p]||'',px=(cfg.proxy||'').trim();
+  if(!px&&!key){const e=new Error('falta la clave');e.code='nokey';throw e}
+  let j;
+  try{
+    if(px)j=await jget(`${px}${px.includes('?')?'&':'?'}p=${p}&q=${encodeURIComponent(q)}`,15000);
+    else if(p==='tavily')j=await jpost('https://api.tavily.com/search',{query:q,max_results:5,include_answer:true,search_depth:'basic'},{Authorization:'Bearer '+key});
+    else if(p==='serper')j=await jpost('https://google.serper.dev/search',{q,hl:'es',num:5},{'X-API-KEY':key});
+    else if(p==='exa')j=await jpost('https://api.exa.ai/search',{query:q,numResults:5,contents:{text:{maxCharacters:400}}},{'x-api-key':key});
+    else j=await jget(`https://s.jina.ai/?q=${encodeURIComponent(q)}`,15000,{Authorization:'Bearer '+key,Accept:'application/json'});
+  }catch(e){
+    if(e&&e.name==='TypeError'){const x=new Error('el navegador bloqueó la conexión (CORS): usa el servidor intermedio de Ajustes');x.code='cors';throw x}
+    throw e;
+  }
+  return Object.assign(parseSearch(p,j),{provider:p});
+}
+const errMsg=e=>e&&e.code==='nokey'?'falta la clave':e&&(e.status===401||e.status===403)?'clave no válida':e&&e.status===429?'se agotó el cupo gratuito':(e&&e.message)||'error';
+// --- diccionario: RAE (API no oficial) para español, dictionaryapi.dev y Wiktionary de respaldo ---
+async function raeApi(w){
+  try{
+    const r=await jget(`https://rae-api.com/api/words/${encodeURIComponent(w)}`,10000),d=r.data||r;
+    const groups=(d.meanings||[]).map(m=>({pos:(m.senses&&m.senses[0]&&m.senses[0].category)||m.category||'',defs:(m.senses||m.definitions||[]).map(x=>({d:strip(x.description||x.raw||x.definition||''),ex:''})).filter(x=>x.d)})).filter(g=>g.defs.length);
+    return groups.length?{word:d.word||w,groups,src:'RAE (API no oficial)',lang:'es'}:null;
+  }catch(e){if(e.status===404)return null;throw e}
+}
+async function wikt(lang,w){                         // el endpoint de definiciones solo existe en en.wiktionary.org (definiciones en inglés)
+  try{
+    const r=await jget(`https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(w)}`),arr=r[lang]||[];
+    const groups=arr.map(e=>({pos:e.partOfSpeech,defs:(e.definitions||[]).filter(d=>d.definition).map(d=>({d:strip(d.definition),ex:strip((d.examples||[])[0]||'')}))})).filter(g=>g.defs.length);
+    return groups.length?{word:w,groups,src:'Wiktionary (definiciones en inglés)',lang}:null;
+  }catch(e){if(e.status===404||e.status===501)return null;throw e}
+}
+async function dictApi(lang,w){
+  try{
+    const r=await jget(`https://api.dictionaryapi.dev/api/v2/entries/${lang}/${encodeURIComponent(w)}`);if(!Array.isArray(r)||!r.length)return null;
+    const x=r[0],ph=(x.phonetics||[]).find(p=>p.audio),au=ph&&(ph.audio.startsWith('//')?'https:'+ph.audio:ph.audio);
+    return{word:x.word,phonetic:x.phonetic||'',audio:au||'',groups:(x.meanings||[]).map(m=>({pos:m.partOfSpeech,defs:(m.definitions||[]).map(d=>({d:d.definition,ex:d.example||''}))})).filter(g=>g.defs.length),src:'dictionaryapi.dev',lang};
+  }catch(e){if(e.status===404)return null;throw e}
+}
+async function dictLookup(lang,w){
+  const word=w.trim().toLowerCase(),base=lang.split('-')[0];let err=null,ok=false;
+  const attempt=async f=>{try{const r=await f();ok=true;return r}catch(e){err=e;return null}};
+  const chain=base==='es'?[()=>raeApi(word),()=>dictApi(lang,word),()=>wikt(base,word)]:[()=>dictApi(lang,word),()=>wikt(base,word)];
+  let r=null;for(const f of chain){r=await attempt(f);if(r)break}
+  if(!r){for(const l of ['es','en','fr','pt','de','it'].filter(x=>x!==base)){r=await attempt(()=>wikt(l,word));if(r){r.other=l;break}}}   // lo busca también en otros idiomas
+  if(r)return r;if(!ok&&err)throw err;return null;
+}
+const trc=store.get('trc',{});
+async function lingva(txt,from,to){const m=c=>c==='zh-CN'?'zh':c;const r=await jget(`https://lingva.ml/api/v1/${m(from)}/${m(to)}/${encodeURIComponent(txt)}`,10000);if(!r.translation)throw new Error('sin traducción');return r.translation}
+async function translate(txt,from,to){
+  const t=txt.slice(0,450),k=from+'>'+to+':'+t;if(trc[k])return trc[k];
+  let out;
+  try{
+    const r=await jget(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(t)}&langpair=${encodeURIComponent(from+'|'+to)}${CLAVES.mymemory?'&de='+encodeURIComponent(CLAVES.mymemory):''}`);
+    if(r.responseStatus&&+r.responseStatus!==200)throw new Error(r.responseDetails||'Traducción no disponible');
+    out=r.responseData.translatedText;
+    if(/MYMEMORY WARNING|QUERY LENGTH LIMIT/i.test(out))throw new Error('cupo agotado');
+  }catch(e){try{out=await lingva(t,from,to)}catch(e2){throw e}}
+  trc[k]=out;const ks=Object.keys(trc);if(ks.length>80)delete trc[ks[0]];store.set('trc',trc);
+  return out;
+}
+// --- libros: primero los que se pueden leer gratis (se muestran a medida que llegan) ---
+const OLLANG={es:'spa',en:'eng',fr:'fre',pt:'por',de:'ger',it:'ita'},IALANG={es:'(spa OR Spanish)',en:'(eng OR English)',fr:'(fre OR French)',pt:'(por OR Portuguese)',de:'(ger OR German)',it:'(ita OR Italian)'};
+async function bookSearch(q,lang,onUpdate){
+  const L=lang==='all'?'':lang,enc=encodeURIComponent(q),out=[];
+  const emit=()=>{if(onUpdate)onUpdate(out.filter(b=>b.title&&b.url).sort((a,b)=>a.lvl-b.lvl))};
+  const jobs=[
+    jget(`https://gutendex.com/books?search=${enc}${L?'&languages='+L:''}`,25000).then(r=>{
+      for(const b of (r.results||[]).slice(0,8)){const f=b.formats||{},k=Object.keys(f),html=k.find(x=>x.startsWith('text/html')),epub=k.find(x=>x.startsWith('application/epub'));
+        out.push({title:b.title,author:(b.authors&&b.authors[0]&&b.authors[0].name)||'',year:'',cover:f['image/jpeg']||'',lvl:0,tag:'Gratis',url:html?f[html]:epub?f[epub]:`https://www.gutenberg.org/ebooks/${b.id}`,link:html?'Leer gratis':'Descargar gratis',src:'Project Gutenberg'})}emit()}),
+    jget(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(`(${q}) AND mediatype:texts AND -access-restricted-item:true${L&&IALANG[L]?' AND language:'+IALANG[L]:''}`)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=year&rows=8&output=json`,20000).then(r=>{
+      for(const d of ((r.response&&r.response.docs)||[])){const cr=Array.isArray(d.creator)?d.creator[0]:d.creator;
+        out.push({title:Array.isArray(d.title)?d.title[0]:d.title,author:cr||'',year:d.year||'',cover:`https://archive.org/services/img/${d.identifier}`,lvl:0,tag:'Gratis',url:`https://archive.org/details/${d.identifier}`,link:'Leer gratis',src:'Internet Archive'})}emit()}),
+    jget(`https://openlibrary.org/search.json?q=${enc}${L&&OLLANG[L]?'&language='+OLLANG[L]:''}&limit=8&fields=key,title,author_name,first_publish_year,cover_i,ebook_access,ia`,15000).then(r=>{
+      for(const d of (r.docs||[]).slice(0,8)){const acc=d.ebook_access,lvl=acc==='public'?0:acc==='borrowable'?1:2;
+        out.push({title:d.title,author:(d.author_name||[]).slice(0,2).join(', '),year:d.first_publish_year||'',cover:d.cover_i?`https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg`:'',lvl,tag:lvl===0?'Gratis':lvl===1?'Préstamo gratis':'Solo ficha',
+          url:lvl===0&&d.ia&&d.ia[0]?`https://archive.org/details/${d.ia[0]}`:`https://openlibrary.org${d.key}`,link:lvl===0?'Leer gratis':lvl===1?'Pedir prestado':'Ver ficha',src:'Open Library'})}emit()})
+  ];
+  if(CLAVES.google)jobs.push(jget(`https://www.googleapis.com/books/v1/volumes?q=${enc}&filter=free-ebooks&maxResults=8${L?'&langRestrict='+L:''}&key=${encodeURIComponent(CLAVES.google)}`,12000).then(r=>{
+    for(const it of (r.items||[]).slice(0,8)){const v=it.volumeInfo||{},a=it.accessInfo||{};
+      out.push({title:v.title,author:(v.authors||[]).slice(0,2).join(', '),year:(v.publishedDate||'').slice(0,4),cover:(v.imageLinks&&v.imageLinks.thumbnail||'').replace('http://','https://'),lvl:0,tag:'Gratis',url:a.webReaderLink||v.infoLink,link:'Leer gratis',src:'Google Libros'})}emit()}));
+  const res=await Promise.allSettled(jobs);
+  if(!out.length&&res.every(x=>x.status==='rejected'))throw res[0].reason;
+  return out.filter(b=>b.title&&b.url).sort((a,b)=>a.lvl-b.lvl);
+}
+const papers=async q=>(await jget(`https://api.openalex.org/works?search=${encodeURIComponent(q)}&per_page=6&select=id,title,publication_year,cited_by_count,doi,authorships,primary_location,open_access`)).results||[];
+async function fxRate(a,b){const r=await jget(`https://api.frankfurter.dev/v2/rate/${a.toLowerCase()}/${b.toLowerCase()}`);if(typeof r.rate!=='number')throw new Error('Moneda no disponible');return r}
+// --- NASA: imagen del día, biblioteca de imágenes y asteroides ---
+const nasaKey=()=>cfg.nasa||'DEMO_KEY';
+async function apod(){
+  const key=nasaKey(),day=isoDay(new Date()),c=store.get('apod',null);
+  if(c&&c.day===day&&c.key===key)return c.data;
+  const d=await jget(`https://api.nasa.gov/planetary/apod?api_key=${encodeURIComponent(key)}`,12000);store.set('apod',{day,key,data:d});return d;
+}
+async function nasaSearch(q){
+  const r=await jget(`https://images-api.nasa.gov/search?q=${encodeURIComponent(q)}&media_type=image&page_size=8`,12000);
+  return ((r.collection&&r.collection.items)||[]).slice(0,8).map(i=>{const d=(i.data||[])[0]||{};return{id:d.nasa_id,title:d.title,desc:clip(strip(d.description),140),date:(d.date_created||'').slice(0,10),thumb:i.links&&i.links[0]&&i.links[0].href}}).filter(x=>x.id);
+}
+async function neoToday(){
+  const d=isoDay(new Date()),r=await jget(`https://api.nasa.gov/neo/rest/v1/feed?start_date=${d}&end_date=${d}&api_key=${encodeURIComponent(nasaKey())}`,12000);
+  const list=((r.near_earth_objects||{})[d]||[]).map(o=>{const c=(o.close_approach_data||[])[0]||{};return{name:o.name,haz:!!o.is_potentially_hazardous_asteroid,diam:o.estimated_diameter&&o.estimated_diameter.meters?o.estimated_diameter.meters.estimated_diameter_max:0,miss:+(c.miss_distance&&c.miss_distance.kilometers)||0,vel:+(c.relative_velocity&&c.relative_velocity.kilometers_per_hour)||0}});
+  return{count:r.element_count||list.length,list:list.sort((a,b)=>a.miss-b.miss).slice(0,5)};
+}
+const firstSentence=t=>{const m=(t||'').match(/^.{40,}?[.!?](\s|$)/);return (m?m[0]:(t||'')).trim().slice(0,260)};
+const errHTML=e=>{const m=E(errMsg(e));return `<p>${tx(`No pude completar la consulta (${m}). Revisa tu conexión e inténtalo de nuevo, ${E(nm())}.`,`Uy, ${E(vocat())}, se me cruzaron los cables (${m}). Revisa tu internet y probamos de nuevo, ¿ya?`,`Disculpe, ${E(vocat())}: no pude completar la consulta (${m}). Verifique su conexión e inténtelo de nuevo.`)}</p>`};
+
+// --- interfaz del panel Web ---
+const WTABS=[['hoy','🌤️ Hoy'],['ask','❓ Preguntar'],['dic','📖 Diccionario'],['tr','🔤 Traducir'],['book','📚 Libros'],['sci','🔬 Ciencia'],['fx','💱 Monedas'],['nasa','🪐 Espacio'],['estado','🩺 Estado']];
+function shell(inner){
+  panel.innerHTML=head('🌐 Web')+`<div class="chips">${WTABS.map(([k,l])=>`<button class="chip ${k===wtab?'on':''}" data-w="${k}">${l}</button>`).join('')}</div>`+inner;
+  wireClose();panel.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>viewWeb(b.dataset.w));
+}
+const $=sel=>panel.querySelector(sel);
+function viewWeb(k){
+  if(k)wtab=k;viewTok++;
+  if(online===false&&wtab!=='estado'){
+    shell(`<p>${E(M('offStart'))}</p><button id="retry">Reintentar</button>`);
+    $('#retry').onclick=async()=>{online=await checkNet();say(online?M('backNow'):M('netOff'),3500);viewWeb()};return;
+  }
+  ({hoy:vHoy,ask:vAsk,dic:vDic,tr:vTr,book:vBook,sci:vSci,fx:vFx,nasa:vNasa,estado:vStatus})[wtab]();
+}
+async function vHoy(){
+  const tok=++viewTok;
+  shell(`<div id="out"><p class="mut">Consultando su ubicación, el clima y las noticias del día…</p></div>
+    <button id="gps">📍 Usar mi ubicación</button><input id="city" placeholder="O escriba su ciudad…"><button id="cs">Buscar ciudad</button>
+    <input id="cc" placeholder="País para feriados (ej. PE)" maxlength="2" value="${E(ctry()||'')}">`);
+  $('#gps').onclick=async()=>{try{loc=await ensureLoc(true)}catch(e){say(tx(`No pude acceder a tu ubicación, ${nm()}. Puedes escribir tu ciudad.`,`No pude ubicarte, ${vocat()}. Escribe tu ciudad y listo.`,`No pude acceder a su ubicación, ${vocat()}. Puede escribir su ciudad.`),4500)}vHoy()};
+  $('#cs').onclick=async()=>{const v=$('#city').value.trim();if(!v)return;try{if(!await cityLoc(v))say(`No encontré esa ciudad, ${vocat()}.`,3500)}catch(e){say('No pude buscar la ciudad.',3500)}vHoy()};
+  $('#cc').onchange=()=>{store.set('ctry',$('#cc').value.trim().toUpperCase());vHoy()};
+  let l=null;try{l=await ensureLoc(false)}catch(e){}
+  const [w,h,e]=await Promise.allSettled([l?getWeather(l):Promise.reject(new Error('sin ubicación')),ctry()?holidays(ctry()):Promise.reject(new Error('sin país')),dayFact()]);
+  if(tok!==viewTok||!$('#out'))return;
+  let html='';
+  if(w.status==='fulfilled'){const f=fmtWeather(w.value),li=locInfo(l);
+    html+=`<div class="card"><div class="ic">${f.ic}</div><div class="tx"><b>${f.t} °C · ${E(f.desc)}</b><small>Sensación ${f.ap} °C · humedad ${f.hum} % · viento ${f.wind} km/h · máx ${f.max}° / mín ${f.min}° · lluvia ${f.pp} %</small></div></div>
+    <p class="mut">📍 Ubicación ${E(li.q)}: ${E(li.txt)} (${E(li.prec)})</p>`}
+  else html+=`<p class="mut">Sin clima todavía: ${l?'no pude consultarlo.':'necesito su ubicación o su ciudad.'}</p>`;
+  if(h.status==='fulfilled'){const x=h.value;
+    html+=x.today?`<p>🎉 Hoy es feriado: <b>${E(x.today.localName)}</b></p>`:x.next?`<p>📅 Próximo feriado: <b>${E(x.next.localName)}</b> (${E(x.next.date)}, en ${daysTo(x.next.date)} días)</p>`:''}
+  else if(ctry())html+=`<p class="mut">No tengo datos de feriados para ${E(ctry())}.</p>`;
+  if(e.status==='fulfilled'&&e.value)html+=`<p><b>📌 Dato del día:</b> ${E(e.value)}</p>`;
+  html+='<p class="mut">Datos: Open-Meteo, Nager.Date y tu buscador (o un respaldo gratuito).</p>';
+  $('#out').innerHTML=html;
+}
+function vAsk(){
+  shell(`<input id="q" placeholder="Pregúnteme algo (ej. ¿Cuánto mide la torre Eiffel?)" autocomplete="off"><button id="go">Preguntar</button><div id="out"><p class="mut">Busco en internet con ${E(SPROV[cfg.sprov])}.</p></div>`);
+  const go=async()=>{
+    const q=$('#q').value.trim();if(!q)return;const out=$('#out');out.innerHTML='<p class="mut">Buscando…</p>';
+    try{const r=await webSearch(q);
+      const items=r.res.map(x=>`<div class="card" style="cursor:default"><div class="tx"><b>${E(x.title)}</b><small>${E(clip(x.snip,200))}</small><a class="lnk" href="${E(x.url)}" target="_blank" rel="noopener">${E(hostOf(x.url))}</a></div></div>`).join('');
+      out.innerHTML=(r.answer?`<p class="ans"><b>${E(r.answer)}</b></p>`:'')+(items||`<p>${E(sorry())}, ${E(vocat())}: no encontré resultados.</p>`)+`<p class="mut">Fuente: ${E(SPROV[r.provider])}.</p>`;
+      const t=r.answer||(r.res[0]&&r.res[0].snip);if(t)say(firstSentence(clip(t,260)),9000);
+    }catch(e){
+      if(e.code==='nokey'){out.innerHTML=`<p>${E(sorry())}, ${E(vocat())}: todavía no tengo un buscador conectado, así que no puedo responder preguntas por ahora.</p>`}
+      else out.innerHTML=errHTML(e);
+    }
+  };
+  $('#go').onclick=go;$('#q').onkeydown=e=>{if(e.key==='Enter')go()};$('#q').focus();
+}
+const DL=[['es','Español'],['en','Inglés'],['fr','Francés'],['pt-BR','Portugués'],['de','Alemán'],['it','Italiano']];
+const LN=Object.fromEntries(DL.map(([k,n])=>[k.split('-')[0],n]));
+function vDic(){
+  shell(`<input id="w" placeholder="Palabra…" autocomplete="off"><select id="l">${DL.map(([k,n])=>`<option value="${k}">${n}</option>`).join('')}</select><button id="go">Buscar</button><div id="out"><p class="mut">Tip: escribe la forma base (singular, masculino o infinitivo).</p></div>`);
+  const go=async()=>{
+    const w=$('#w').value.trim(),l=$('#l').value;if(!w)return;const out=$('#out');out.innerHTML='<p class="mut">Buscando…</p>';
+    try{const r=await dictLookup(l,w);
+      if(!r){out.innerHTML=`<p>${E(sorry())}, ${E(vocat())}: no encontré «${E(w)}». Prueba con la forma base de la palabra (singular, masculino o infinitivo).</p>`;return}
+      out.innerHTML=`<b>${E(r.word)}</b> <span class="mut">${E(r.phonetic||'')}</span> ${r.audio?'<button id="play">🔊</button>':''}${r.other?`<p class="mut">No estaba en el idioma elegido; lo encontré en ${E(LN[r.other]||r.other)}.</p>`:''}`
+        +r.groups.slice(0,3).map(g=>`<p><i>${E(g.pos||'')}</i><br>${g.defs.slice(0,3).map(d=>'• '+E(d.d)+(d.ex?`<br><span class="mut">«${E(d.ex)}»</span>`:'')).join('<br>')}</p>`).join('')+`<p class="mut">Fuente: ${E(r.src)}.</p>`;
+      if(r.audio)$('#play').onclick=()=>{try{new Audio(r.audio).play()}catch(e){}};
+    }catch(e){out.innerHTML=errHTML(e)}
+  };
+  $('#go').onclick=go;$('#w').onkeydown=e=>{if(e.key==='Enter')go()};$('#w').focus();
+}
+const TL=[['es','Español'],['en','Inglés'],['fr','Francés'],['pt','Portugués'],['de','Alemán'],['it','Italiano'],['ja','Japonés'],['zh-CN','Chino']];
+function vTr(){
+  const opt=(sel)=>TL.map(([k,n])=>`<option value="${k}" ${k===sel?'selected':''}>${n}</option>`).join('');
+  shell(`<textarea id="t" rows="3" maxlength="450" placeholder="Texto a traducir (hasta 450 caracteres)"></textarea>
+    <select id="f">${opt('es')}</select><select id="o">${opt('en')}</select><button id="go">Traducir</button><button id="sw">⇄</button><div id="out"></div>`);
+  $('#sw').onclick=()=>{const a=$('#f').value;$('#f').value=$('#o').value;$('#o').value=a};
+  $('#go').onclick=async()=>{
+    const t=$('#t').value.trim();if(!t)return;const out=$('#out');out.innerHTML='<p class="mut">Traduciendo…</p>';
+    try{const r=await translate(t,$('#f').value,$('#o').value);out.innerHTML=`<p class="ans"><b>${E(r)}</b></p><p class="mut">Traducción automática de MyMemory.</p>`}catch(e){out.innerHTML=errHTML(e)}
+  };
+}
+function vBook(){
+  shell(`<input id="q" placeholder="Título, autor o tema…" autocomplete="off"><select id="l"><option value="es">Español</option><option value="en">Inglés</option><option value="fr">Francés</option><option value="pt">Portugués</option><option value="all">Todos los idiomas</option></select><button id="go">Buscar libros</button>
+    <div id="out"><p class="mut">Muestro primero los que puedes leer gratis (Project Gutenberg, Internet Archive y Open Library).</p></div>`);
+  const card=b=>`<div class="card" style="cursor:default">${b.cover?`<img class="thumb" src="${E(b.cover)}" alt="">`:'<div class="ic">📘</div>'}<div class="tx"><b>${E(b.title)}</b><small>${E(b.author||'Autor desconocido')}${b.year?' · '+E(b.year):''} · ${E(b.src)}</small><span class="tag" style="${b.lvl===0?'background:#5bd18b':b.lvl===1?'':'background:#aab'}">${E(b.tag)}</span> <a class="lnk" href="${E(b.url)}" target="_blank" rel="noopener">${E(b.link)}</a></div></div>`;
+  const go=async()=>{
+    const q=$('#q').value.trim();if(!q)return;const out=$('#out');out.innerHTML='<p class="mut">Buscando…</p>';
+    const draw=(r,loading)=>{out.innerHTML=(r.length?r.map(card).join(''):loading?'':`<p>${E(sorry())}, ${E(vocat())}: no encontré libros. Prueba con otro idioma o con menos palabras.</p>`)+(loading?'<p class="mut">Cargando más fuentes…</p>':'')};
+    try{const r=await bookSearch(q,$('#l').value,l=>draw(l,true));draw(r,false)}catch(e){out.innerHTML=errHTML(e)}
+  };
+  $('#go').onclick=go;$('#q').onkeydown=e=>{if(e.key==='Enter')go()};$('#q').focus();
+}
+function vSci(){
+  shell(`<input id="q" placeholder="Tema de investigación…" autocomplete="off"><button id="go">Buscar artículos</button><div id="out"></div>`);
+  const go=async()=>{
+    const q=$('#q').value.trim();if(!q)return;const out=$('#out');out.innerHTML='<p class="mut">Buscando…</p>';
+    try{const r=await papers(q);
+      out.innerHTML=r.length?r.map(a=>{const au=(a.authorships||[]).slice(0,3).map(x=>x.author&&x.author.display_name).filter(Boolean).join(', '),u=a.doi||(a.primary_location&&a.primary_location.landing_page_url)||a.id,pdf=a.open_access&&a.open_access.oa_url;
+        return `<div class="card" style="cursor:default"><div class="tx"><b>${E(a.title||'(sin título)')}</b><small>${E(au||'—')} · ${E(a.publication_year||'')} · ${E(a.cited_by_count||0)} citas</small><a class="lnk" href="${E(u)}" target="_blank" rel="noopener">Ver artículo</a>${pdf?` · <a class="lnk" href="${E(pdf)}" target="_blank" rel="noopener">Acceso abierto</a>`:''}</div></div>`}).join('')+'<p class="mut">Datos: OpenAlex.</p>':`<p>${E(sorry())}, ${E(vocat())}: no encontré artículos.</p>`;
+    }catch(e){out.innerHTML=errHTML(e)}
+  };
+  $('#go').onclick=go;$('#q').onkeydown=e=>{if(e.key==='Enter')go()};$('#q').focus();
+}
+function vFx(){
+  const cur=['PEN','USD','EUR','MXN','COP','CLP','ARS','BRL','GBP','JPY','CNY'],f=store.get('fx',{a:'USD',b:'PEN'});
+  shell(`<input id="n" type="number" value="1" min="0" step="any"><input id="a" list="cl" value="${E(f.a)}" maxlength="3"><input id="b" list="cl" value="${E(f.b)}" maxlength="3">
+    <datalist id="cl">${cur.map(c=>`<option value="${c}">`).join('')}</datalist><button id="go">Convertir</button><button id="sw">⇄</button><div id="out"></div>`);
+  $('#sw').onclick=()=>{const a=$('#a').value;$('#a').value=$('#b').value;$('#b').value=a};
+  $('#go').onclick=async()=>{
+    const n=parseFloat($('#n').value),a=$('#a').value.trim().toUpperCase(),b=$('#b').value.trim().toUpperCase(),out=$('#out');
+    if(!(n>=0)||a.length!==3||b.length!==3){out.innerHTML='<p>Indica un monto y dos códigos de moneda de 3 letras.</p>';return}
+    out.innerHTML='<p class="mut">Consultando…</p>';
+    try{const r=await fxRate(a,b);store.set('fx',{a,b});out.innerHTML=`<p class="ans"><b>${E(n)} ${E(a)} = ${E((n*r.rate).toFixed(2))} ${E(b)}</b></p><p class="mut">Tasa de referencia ${E(r.rate)} (${E(r.date||'')}). Son tasas diarias, no cotizaciones para operar. Datos: Frankfurter.</p>`}
+    catch(e){out.innerHTML=e.status===404||e.status===422?`<p>No tengo la moneda ${E(a)} o ${E(b)}, ${E(vocat())}.</p>`:errHTML(e)}
+  };
+}
+async function vNasa(){
+  const tok=++viewTok;
+  shell(`<p class="mut">Cada día la NASA publica una imagen o video del universo con una explicación escrita por astrónomos. Abajo también puedes buscar en su biblioteca y ver asteroides que pasan cerca.</p>
+    <h3 style="margin-top:6px">📸 Imagen del día</h3><div id="out"><p class="mut">Consultando a la NASA…</p></div>
+    <h3 style="margin-top:12px">🔭 Buscar en la biblioteca de la NASA</h3><input id="q" placeholder="Ej. Marte, Luna, Hubble, cohete…" autocomplete="off"><button id="go">Buscar</button><div id="res"></div>
+    <h3 style="margin-top:12px">☄️ Asteroides cerca de la Tierra hoy</h3><button id="neo">Ver asteroides de hoy</button><div id="nr"></div>
+    <p class="mut">Usa la clave de NASA de ⚙️ Ajustes; sin clave usa una de demostración con pocas consultas por hora.</p>`);
+  const go=async()=>{
+    const q=$('#q').value.trim();if(!q)return;const o=$('#res');o.innerHTML='<p class="mut">Buscando…</p>';
+    try{const r=await nasaSearch(q);o.innerHTML=r.length?r.map(x=>`<div class="card" style="cursor:default">${x.thumb?`<img class="thumb" src="${E(x.thumb)}" alt="" style="width:64px;height:48px">`:'<div class="ic">🛰️</div>'}<div class="tx"><b>${E(x.title)}</b><small>${E(x.date)} · ${E(x.desc)}</small><a class="lnk" href="https://images.nasa.gov/details/${encodeURIComponent(x.id)}" target="_blank" rel="noopener">Ver en NASA</a></div></div>`).join(''):`<p>No encontré imágenes de «${E(q)}».</p>`}catch(e){o.innerHTML=errHTML(e)}
+  };
+  $('#go').onclick=go;$('#q').onkeydown=e=>{if(e.key==='Enter')go()};
+  $('#neo').onclick=async()=>{const o=$('#nr');o.innerHTML='<p class="mut">Consultando…</p>';
+    try{const r=await neoToday();o.innerHTML=`<p>Hoy la NASA registra <b>${E(r.count)}</b> asteroides cercanos. Los 5 que pasan más cerca:</p>`+r.list.map(a=>`<p>• <b>${E(a.name)}</b>: a ${E(Math.round(a.miss).toLocaleString())} km (${E((a.miss/384400).toFixed(1))} veces la distancia a la Luna), hasta ${E(Math.round(a.diam))} m de tamaño${a.haz?' ⚠️ potencialmente peligroso':''}</p>`).join('')}
+    catch(e){o.innerHTML=e.status===429?`<p>${E(sorry())}, ${E(vocat())}: se alcanzó el límite de la clave de demostración. Pon tu clave gratuita en ⚙️ Ajustes.</p>`:errHTML(e)}};
+  try{
+    const d=await apod();if(tok!==viewTok||!$('#out'))return;
+    const media=d.media_type==='image'?`<img class="apod" src="${E(d.url)}" alt="${E(d.title)}">`:`<a class="lnk" href="${E(d.url)}" target="_blank" rel="noopener">Ver el video del día</a>`;
+    $('#out').innerHTML=`<b>${E(d.title)}</b> <span class="mut">${E(d.date||'')}</span>${media}<p class="ans" id="ex">${E(d.explanation||'')}</p><button id="tr">Traducir al español</button>${d.hdurl?` <a class="lnk" href="${E(d.hdurl)}" target="_blank" rel="noopener">Imagen en alta resolución</a>`:''}`;
+    $('#tr').onclick=async()=>{try{$('#ex').textContent=await translate(d.explanation||'','en','es')}catch(e){$('#ex').textContent='No pude traducir en este momento.'}};
+  }catch(e){if(tok!==viewTok||!$('#out'))return;$('#out').innerHTML=e.status===429?`<p>${E(sorry())}, ${E(vocat())}: se alcanzó el límite de la clave de demostración. Pon tu clave gratuita en ⚙️ Ajustes.</p>`:errHTML(e)}
+}
+// --- perfil (primera vez y Ajustes) ---
+function mountProfile(el,first,done){
+  let g=(prof&&prof.style)||'',s=(prof&&prof.gender)||'',name=nm();
+  const draw=()=>{
+    el.innerHTML=`<p>${first?'¡Qué bueno! ':''}¿Cómo te llamas?</p><input id="nm" placeholder="Tu nombre" value="${E(name)}" maxlength="40">
+      <p class="mut">¿Cómo prefieres que te llame?</p><div class="chips">${[['n','Por mi nombre'],['a','Amigo'],['b','Boss']].map(([k,l])=>`<button class="chip ${g===k?'on':''}" data-g="${k}">${l}</button>`).join('')}</div>
+      ${g==='b'?`<p class="mut">¿Hombre o mujer?</p><div class="chips">${[['m','Hombre'],['f','Mujer']].map(([k,l])=>`<button class="chip ${s===k?'on':''}" data-s="${k}">${l}</button>`).join('')}</div>`:''}
+      <button id="sv">Guardar</button><p class="mut">Se guarda solo en este navegador.</p>`;
+    const inp=el.querySelector('#nm');inp.oninput=()=>{name=inp.value};
+    el.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{g=b.dataset.g;draw()});
+    el.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{s=b.dataset.s;draw()});
+    el.querySelector('#sv').onclick=()=>{
+      const n=(name||'').trim();
+      if(!n){say('Necesito tu nombre para saber cómo llamarte.',3500);return}
+      if(!g){say('Elige cómo prefieres que te llame.',3500);return}
+      if(g==='b'&&!s){say('Indícame si eres hombre o mujer, para dirigirme a ti como corresponde.',4000);return}
+      prof={name:n,style:g,gender:g==='b'?s:(prof&&prof.gender)||''};store.set('prof',prof);done(first);
+    };
+  };
+  draw();
+}
+function vProfile(first){panel.innerHTML=head('👤 Bienvenido')+'<div id="pf"></div>';wireClose();mountProfile($('#pf'),true,()=>{closePanel();afterProfile(true)})}
+async function afterProfile(first){
+  await sayW(M('welcome'),4800);
+  if(first&&online)await briefing();
+}
+// --- ajustes ---
+function vSettings(){
+  const sr=cfg.proxy?'servidor intermedio':cfg.keys[cfg.sprov]?SPROV[cfg.sprov]:'';
+  panel.innerHTML=head('⚙️ Ajustes')+`
+    <h3 style="margin-top:4px">👤 Perfil</h3><div id="pf"></div>
+    <h3 style="margin-top:12px">🐛 Tamaño de las mascotas</h3><input id="ps" type="range" min="50" max="130" step="5" value="${Math.round(cfg.ps*100)}"><p class="mut" id="pv">${Math.round(cfg.ps*100)} %</p>
+    <h3 style="margin-top:12px">🔎 Buscador de preguntas</h3><p class="mut">${sr?`✅ Conectado (${E(sr)})`:'⚠️ Todavía no está conectado.'}</p><button id="ts">Probar buscador</button><div id="tr" class="mut"></div>
+    <h3 style="margin-top:12px">💭 Pensamientos</h3><label class="mut"><input type="checkbox" id="wt" ${cfg.webth?'checked':''}>Pensar en cosas reales de internet (noticias, tecnología, espacio)</label>
+    <h3 style="margin-top:12px">💎 Modo Pro (prueba)</h3>${proBtn()}${proExplain()}`;
+  wireClose();mountProfile($('#pf'),false,()=>afterProfile(false));wirePro(vSettings);
+  $('#ps').oninput=()=>{cfg.ps=(+$('#ps').value)/100;$('#pv').textContent=Math.round(cfg.ps*100)+' %'};$('#ps').onchange=saveCfg;
+  $('#ts').onclick=async()=>{const o=$('#tr');o.textContent='Probando…';try{const r=await webSearch('¿Qué es un ciempiés?');o.textContent=`✅ Funciona con ${SPROV[r.provider]}: ${r.res.length} resultados.`}catch(e){o.textContent='❌ '+(e.code==='nokey'?'falta la clave en claves.js':errMsg(e))}};
+  $('#wt').onchange=()=>{cfg.webth=$('#wt').checked;saveCfg()};
+}
+// --- cronómetro y temporizador ---
+const SW={run:false,t0:0,acc:0,laps:[]},TM={run:false,end:0,left:0,total:0};
+let tmTab='sw';
+const fmtT=(ms,cs)=>{const t=Math.max(0,ms),h=Math.floor(t/36e5),m=Math.floor(t/6e4)%60,s=Math.floor(t/1e3)%60,c=Math.floor(t/10)%100;return (h?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+(cs?'.'+String(c).padStart(2,'0'):'')};
+const swMs=()=>SW.acc+(SW.run?Date.now()-SW.t0:0),tmMs=()=>TM.run?Math.max(0,TM.end-Date.now()):TM.left;
+function beep(){try{const A=new (window.AudioContext||window.webkitAudioContext)(),o=A.createOscillator(),g=A.createGain();o.connect(g);g.connect(A.destination);o.frequency.value=880;g.gain.value=.2;o.start();let n=0;const id=setInterval(()=>{g.gain.value=n%2?0:.2;if(++n>=8){clearInterval(id);o.stop();A.close()}},250)}catch(e){}}
+function alarm(){
+  say(tx('¡Se acabó el tiempo!',`¡Se acabó el tiempo, ${vocat()}! ⏰`,`El tiempo ha finalizado, ${vocat()}.`),9000);beep();
+  try{if(typeof Notification!=='undefined'&&Notification.permission==='granted')new Notification('⏰ Temporizador',{body:'Se acabó el tiempo'})}catch(e){}
+  try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){}
+}
+function updTime(){
+  if(TM.run&&Date.now()>=TM.end){TM.run=false;TM.left=0;alarm();if(panelOpen&&$('#td'))vTiempo()}
+  if(!panelOpen)return;
+  const sd=$('#sd'),td=$('#td');if(sd&&typeof sd.textContent!=='undefined'&&SW.run)sd.textContent=fmtT(swMs(),true);
+  if(td&&TM.run){td.textContent=fmtT(tmMs());const pb=$('#tb');if(pb&&TM.total)pb.style.width=(100*(1-tmMs()/TM.total))+'%'}
+}
+setInterval(updTime,200);
+function vTiempo(){
+  const tabs=`<div class="chips"><button class="chip ${tmTab==='sw'?'on':''}" data-m="sw">⏱️ Cronómetro</button><button class="chip ${tmTab==='tm'?'on':''}" data-m="tm">⏳ Temporizador</button></div>`;
+  let body;
+  if(tmTab==='sw')body=`<div id="sd" style="font-size:34px;text-align:center;margin:8px 0">${fmtT(swMs(),true)}</div>
+    <div style="text-align:center"><button id="a">${SW.run?'⏸ Pausar':'▶ Iniciar'}</button> <button id="l">🚩 Vuelta</button> <button id="r">↺ Reiniciar</button></div>
+    ${SW.laps.length?`<div style="margin-top:8px">${SW.laps.map((x,i)=>`<p class="mut">Vuelta ${i+1}: ${fmtT(x,true)}</p>`).reverse().join('')}</div>`:''}`;
+  else body=`<div class="chips">${[1,5,10,15,25,45].map(m=>`<button class="chip" data-p="${m}">${m} min</button>`).join('')}</div>
+    <input id="tmin" type="number" min="1" step="1" placeholder="Minutos" value="${TM.total&&!TM.run?Math.round(TM.total/6e4):''}">
+    <div id="td" style="font-size:34px;text-align:center;margin:8px 0">${fmtT(tmMs()||TM.total)}</div>
+    <div style="height:6px;background:#8883;border-radius:4px"><div id="tb" style="height:6px;background:var(--acc);border-radius:4px;width:${TM.total&&(TM.run||TM.left)?100*(1-tmMs()/TM.total):0}%"></div></div>
+    <div style="text-align:center;margin-top:8px"><button id="a">${TM.run?'⏸ Pausar':'▶ Iniciar'}</button> <button id="r">↺ Reiniciar</button></div>`;
+  panel.innerHTML=head('⏱️ Tiempo')+tabs+body;wireClose();
+  panel.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{tmTab=b.dataset.m;vTiempo()});
+  if(tmTab==='sw'){
+    $('#a').onclick=()=>{if(SW.run){SW.acc=swMs();SW.run=false}else{SW.t0=Date.now();SW.run=true}vTiempo()};
+    $('#l').onclick=()=>{if(SW.run||SW.acc){SW.laps.push(swMs());vTiempo()}};
+    $('#r').onclick=()=>{SW.run=false;SW.acc=0;SW.laps=[];vTiempo()};
+  }else{
+    panel.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{TM.run=false;TM.total=TM.left=(+b.dataset.p)*6e4;vTiempo()});
+    $('#a').onclick=()=>{
+      if(TM.run){TM.left=tmMs();TM.run=false}
+      else{const m=parseFloat($('#tmin').value);if(m>0&&(!TM.left||m*6e4!==TM.total)){TM.total=TM.left=m*6e4}if(!TM.left)return;TM.end=Date.now()+TM.left;TM.run=true;try{if(typeof Notification!=='undefined'&&Notification.permission==='default')Notification.requestPermission()}catch(e){}}
+      vTiempo();
+    };
+    $('#r').onclick=()=>{TM.run=false;TM.left=TM.total;vTiempo()};
+  }
+}
+// --- pensamientos con información real de internet y de tu propia agenda ---
+const TH={
+ n:['¿Qué habrá detrás de esa esquina?','Hoy me siento especialmente metálico.','Si me quedo quieto, ¿cuenta como descansar?','Creo que mis patas están muy bien coordinadas hoy.','¿Se me habrá caído un tornillo?','Me pregunto qué estará haciendo el resto del mundo…'],
+ a:['¿Y si hoy me invita un cafecito? ☕','Uy, qué flojera… pero igual chambeo.','Ese cursor se mueve como pollo sin cabeza, jaja.','Estoy más fresco que lechuga, causa.','¿Será que hay ceviche hoy…?','Mis patitas van al toque, ¡mira nomás!'],
+ b:['Debo mantenerme atento a lo que necesite.','Revisando mentalmente sus pendientes…','Conviene estar siempre listo para ayudar.','Mis patas están perfectamente sincronizadas.','Un buen asistente anticipa lo que se necesita.','No quiero distraerle; trabajaré en silencio.']
+};
+const THX={
+ n:{arrive:'Ya llegué… ¿y ahora qué hago?',note:'Anotado. No lo voy a olvidar.',night:'Qué sueño… ¿ya es tarde?',morning:'Un nuevo día, nuevas ideas.',newpet:'Este cuerpo nuevo se siente bien.'},
+ a:{arrive:'¡Llegué, causa! Ahora… ¿dónde está mi premio?',note:'Apuntadito. ¡Ni lo olvido, pata!',night:'Uy, qué sueño, ya es tardecito…',morning:'Arriba, a chambear con ganas.',newpet:'¡Qué bacán mi nuevo look!'},
+ b:{arrive:'He llegado. Quedo atento.',note:'Anotado con cuidado.',night:'Es tarde; ojalá descanse pronto.',morning:'Buen día; listo para servir.',newpet:'Un nuevo aspecto: espero que sea de su agrado.'}
+};
+let tpool=store.get('tpool',{ts:0,items:[]}),tShown=new Set(),lbag=[];
+async function refreshPool(){
+  if(!online||!cfg.webth)return;
+  if(tpool.items.length&&Date.now()-tpool.ts<3*3600e3)return;
+  tpool.ts=Date.now()-2*3600e3;                                      // evita lanzar varias actualizaciones a la vez
+  const items=[];
+  await Promise.allSettled([
+    (async()=>{const r=await jget('https://api.gdeltproject.org/api/v2/doc/doc?query='+encodeURIComponent('(ciencia OR tecnología OR economía OR salud) sourcelang:spanish')+'&mode=ArtList&format=json&maxrecords=12&timespan=1d&sort=datedesc',12000);
+      const seen=new Set();for(const a of (r.articles||[])){const t=clip(strip(a.title),130);if(t&&!seen.has(t)&&seen.size<8){seen.add(t);items.push({k:'news',t})}}})(),
+    (async()=>{if(!(cfg.keys[cfg.sprov]||cfg.proxy))return;const r=await webSearch('noticias de hoy en '+(ctry()||'el mundo'));r.res.slice(0,3).forEach(x=>items.push({k:'news',t:clip(x.title,130)}))})(),
+    (async()=>{const ids=await jget('https://hacker-news.firebaseio.com/v0/topstories.json',9000),its=await Promise.all(ids.slice(0,3).map(id=>jget(`https://hacker-news.firebaseio.com/v0/item/${id}.json`,9000)));
+      for(const it of its.slice(0,2)){if(it&&it.title){try{items.push({k:'tech',t:clip(await translate(it.title,'en','es'),130)})}catch(e){}}}})(),
+    (async()=>{const r=await jget('https://api.spaceflightnewsapi.net/v4/articles/?limit=2',9000);for(const a of (r.results||[]).slice(0,1)){try{items.push({k:'space',t:clip(await translate(a.title,'en','es'),130)})}catch(e){}}})(),
+    (async()=>{const f=await dayFact();if(f)items.push({k:'fact',t:clip(f,170)})})()
+  ]);
+  if(items.length){tpool={ts:Date.now(),items};store.set('tpool',tpool);tShown=new Set()}
+}
+function thoughtFrom(it){
+  const k=styleKey(),v=vocat(),t=it.t;
+  const T={news:{n:`Leí que: «${t}». ¿Será cierto?`,a:`Oe, ¿viste esto, ${v}? «${t}».`,b:`${v}, me permito comentarle una noticia: «${t}».`},
+    tech:{n:`Dicen en el mundo tech: «${t}».`,a:`Mira lo que anda circulando en tecnología, ${v}: «${t}».`,b:`En tecnología, ${v}: «${t}».`},
+    space:{n:`Cosas del espacio: «${t}».`,a:`Ahí en el espacio dicen: «${t}». ¡Qué loco, ${v}!`,b:`Novedades del espacio, ${v}: «${t}».`},
+    fact:{n:t,a:`¿Sabías, ${v}? ${t}`,b:`Dato del día, ${v}: ${t}`}};
+  return T[it.k]&&T[it.k][k];
+}
+function contextThoughts(){
+  const out=[],v=vocat(),now=Date.now(),n=notes.length,pl=n===1?'':'s';
+  const ev=(store.get('events',[])||[]).filter(e=>e.ts>now&&e.ts-now<864e5).sort((a,b)=>a.ts-b.ts)[0];
+  if(ev){const m=Math.round((ev.ts-now)/6e4),when=m<60?`en ${m} min`:`a las ${new Date(ev.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+    out.push(tx(`Recuerda: «${ev.title}» ${when}.`,`Ojo ${v}: «${ev.title}» ${when}. ¡No te me duermas!`,`${v}, «${ev.title}» ${when}.`))}
+  if(n)out.push(tx(`Tengo ${n} nota${pl} guardada${pl}. Ojalá no se pierda ninguna.`,`Ya van ${n} notita${pl}, ${v}. ¡Qué ordenado!`,`Hay ${n} nota${pl} guardada${pl}, ${v}. Todo en orden.`));
+  const wx=store.get('wx',null);
+  if(wx&&now-wx.ts<4*3600e3)out.push(wx.pp>=50?tx(`Va a llover (${wx.pp} %). Ojalá no me moje.`,`Se viene la lluvia, ${v}. ¡Llevo mi paraguas imaginario!`,`${v}, hay ${wx.pp} % de probabilidad de lluvia.`):tx(`Afuera hay ${wx.t} °C y ${wx.desc.toLowerCase()}.`,`Afuera: ${wx.t} °C y ${wx.desc.toLowerCase()}, ${v}.`,`${v}, afuera hay ${wx.t} °C y ${wx.desc.toLowerCase()}.`));
+  const hol=store.get('hol',null);
+  if(hol){const d=daysTo(hol.date);if(d>=0&&d<=10)out.push(tx(`Faltan ${d} días para «${hol.name}».`,`Ya falta poquito pal feriado «${hol.name}», ${v}: ${d} días.`,`Faltan ${d} días para «${hol.name}», ${v}.`))}
+  return out;
+}
+function localLine(){
+  if(!lbag.length){lbag=TH[styleKey()].slice();for(let i=lbag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[lbag[i],lbag[j]]=[lbag[j],lbag[i]]}}
+  return lbag.pop();
+}
+function thinkIdle(){
+  const h=new Date().getHours(),x=THX[styleKey()],r=Math.random();let msg=null;
+  refreshPool().catch(()=>{});
+  if(online&&cfg.webth&&tpool.items.length&&r<.5){
+    let idx=tpool.items.map((_,i)=>i).filter(i=>!tShown.has(i));if(!idx.length){tShown.clear();idx=tpool.items.map((_,i)=>i)}
+    const i=pick(idx);tShown.add(i);msg=thoughtFrom(tpool.items[i]);
+  }else if(r<.8){const c=contextThoughts();if(c.length)msg=pick(c)}
+  if(!msg)msg=(h>=23||h<5)&&r>.85?x.night:localLine();
+  think(msg,Math.min(9500,3600+msg.length*45));
+}
+function thinkEv(k){const m=THX[styleKey()][k];if(m)think(m,3600)}
+// --- estado de los servicios: prueba cada API desde esta página ---
+async function vStatus(){
+  const tok=++viewTok,y=new Date().getFullYear();
+  const C=[['Clima (Open-Meteo)','https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current=temperature_2m'],
+    ['Ciudades (Open-Meteo)','https://geocoding-api.open-meteo.com/v1/search?name=Lima&count=1'],
+    ['Diccionario (RAE, API no oficial)','https://rae-api.com/api/words/hola'],
+    ['Diccionario (dictionaryapi.dev)','https://api.dictionaryapi.dev/api/v2/entries/en/hello'],
+    ['Diccionario (Wiktionary en inglés)','https://en.wiktionary.org/api/rest_v1/page/definition/hola'],
+    ['Feriados (Nager.Date)',`https://date.nager.at/api/v3/PublicHolidays/${y}/PE`],
+    ['Traducción (MyMemory)','https://api.mymemory.translated.net/get?q=hola&langpair=es%7Cen'],
+    ['Traducción de respaldo (Lingva)','https://lingva.ml/api/v1/es/en/hola',10000],
+    ['Libros gratis (Project Gutenberg)','https://gutendex.com/books?search=quijote&languages=es',25000],
+    ['Libros gratis (Internet Archive)','https://archive.org/advancedsearch.php?q=quijote&fl[]=identifier&rows=1&output=json',20000],
+    ['Libros (Open Library)','https://openlibrary.org/search.json?q=quijote&limit=1&fields=key'],
+    ['Ciencia (OpenAlex)','https://api.openalex.org/works?search=vision&per_page=1&select=id'],
+    ['Monedas (Frankfurter)','https://api.frankfurter.dev/v2/rate/usd/pen'],
+    ['NASA (imagen del día)',null],
+    ['NASA (biblioteca)','https://images-api.nasa.gov/search?q=mars&media_type=image&page_size=1'],
+    ['Noticias en español (GDELT)','https://api.gdeltproject.org/api/v2/doc/doc?query='+encodeURIComponent('ciencia sourcelang:spanish')+'&mode=ArtList&format=json&maxrecords=1&timespan=1d',15000],
+    ['Tecnología (Hacker News)','https://hacker-news.firebaseio.com/v0/topstories.json'],
+    ['Espacio (Spaceflight News)','https://api.spaceflightnewsapi.net/v4/articles/?limit=1']];
+  shell('<div id="out"><p class="mut">Probando cada servicio… (algunos tardan hasta 25 s)</p></div>');
+  const rows=await Promise.all(C.map(async([n,u,ms])=>{const t0=Date.now();
+    try{if(u)await jget(u,ms||9000);else await apod();return[n,'ok',Date.now()-t0,'']}
+    catch(e){return[n,e.status===429?'warn':'bad',Date.now()-t0,e.status===429?'cupo agotado por ahora (se reinicia solo)':e.status?'HTTP '+e.status:e.name==='AbortError'?'sin respuesta a tiempo':'bloqueada o sin conexión']}}));
+  if(tok!==viewTok||!$('#out'))return;
+  const ok=rows.filter(r=>r[1]==='ok').length,sr=cfg.proxy?'servidor intermedio configurado':cfg.keys[cfg.sprov]?`clave de ${SPROV[cfg.sprov]} guardada`:'sin clave en claves.js';
+  $('#out').innerHTML=rows.map(r=>`<p>${r[1]==='ok'?'✅':r[1]==='warn'?'⚠️':'❌'} ${E(r[0])} <span class="mut">${r[1]==='ok'?r[2]+' ms':E(r[3])}</span></p>`).join('')+`<p>🔎 Buscador de preguntas: <span class="mut">${E(sr)}</span></p>`
+    +(ok===0?'<p class="mut">Si todos fallan aunque tengas internet, esta página probablemente está en un entorno que bloquea conexiones externas (por ejemplo, una vista previa). Ábrela desde tu repositorio (GitHub Pages) o con un servidor local.</p>':'<p class="mut">❌ = no responde desde aquí (caído o bloqueado). ⚠️ = límite diario alcanzado.</p>');
+}
+async function briefing(){
+  try{
+    if(!(loc&&(loc.src==='ciudad'||(loc.ts&&Date.now()-loc.ts<6*3600e3))))await sayW(M('perm'),3600);
+    const l=await ensureLoc(false),w=fmtWeather(await getWeather(l)),li=locInfo(l);
+    await sayW(M('weather',w));
+    await sayW(M('coords',li),5200);
+  }catch(e){await sayW(M('noWeather'),5200)}
+  try{const cc=ctry();if(cc){const h=await holidays(cc);
+    if(h.today)await sayW(M('holToday',h.today.localName));
+    else if(h.next&&daysTo(h.next.date)<=7)await sayW(M('holNext',h.next.localName,daysTo(h.next.date)))}}catch(e){}
+  try{const f=await dayFact();if(f)await sayW(clip(M('efem',f),240),9000);else{await refreshPool();const n0=tpool.items.find(i=>i.k==='news');if(n0)await sayW(clip(thoughtFrom(n0),240),8000)}}catch(e){}
+  say(M('ready'),6500);
+}
+async function startup(){
+  await sleep(500);
+  say('Verificando la conexión a internet…',0);
+  online=await checkNet();
+  const blocked=!online&&navigator.onLine!==false;                  // hay red, pero los servicios no responden
+  await sayW(online?M('netOk'):blocked?M('netBlocked'):M('netOff'),3400);
+  refreshPool().catch(()=>{});
+  const g=greet();
+  if(!prof){                                                         // primera vez: presentación sin tratamiento todavía
+    await sayW(`${g}. ¡Mucho gusto! Soy tu mascota asistente.`,3600);
+    say('Antes de empezar: ¿cómo te llamas y cómo prefieres que te llame?',0);
+    openPanel('perfil');return;
+  }
+  await sayW(M('hello',g),3800);
+  if(online)await briefing();else say(M('offStart'),5500);
+}
+addEventListener('offline',()=>{online=false;say(M('offNow'),6000)});
+addEventListener('online',async()=>{const ok=await checkNet();if(ok&&online!==true){online=true;await sayW(M('backNow'),4200);refreshPool().catch(()=>{})}});
+
+// ---------- Creador de mascotas: la mascota hace las preguntas ----------
+let cr=null,wizOnClose=null,crPrev=null;
+const CR_STEPS=c=>['name','fam',...({centi:['form','largo'],spider:['legs','traits'],beetle:['horn'],bee:['form']}[c.fam]||[]),'tam','fin','color','neon','ok'];
+const CRQ={
+  name:()=>tx('¿Cómo quieres llamarme?','Oe, ¿cómo me vas a poner de nombre, pues?',`${vocat()}, ¿cómo desea llamarme?`),
+  fam:()=>tx('¿Qué especie quieres que sea?','¿Y qué bicho voy a ser, causa?',`¿Qué especie prefiere, ${vocat()}?`),
+  form:()=>tx('¿Qué forma prefieres?','¿Y de qué forma me armas, pata?',`¿Qué forma prefiere, ${vocat()}?`),
+  largo:()=>tx('¿Qué tan largo quieres que sea?','¿Qué tan largazo me quieres, pata?',`¿Qué largo desea, ${vocat()}?`),
+  tam:()=>tx('¿De qué tamaño me quieres?','¿Chiquito o bien grandazo, pues?',`¿Qué tamaño prefiere, ${vocat()}?`),
+  legs:()=>tx('¿Cómo quieres mis patas?','¿Y las patitas, cortas o bien largas?',`¿Qué longitud de patas prefiere, ${vocat()}?`),
+  traits:()=>tx('Elige los rasgos que quieras (puedes elegir varios).','Escoge los detalles que te gusten, ¡varios si quieres!',`Seleccione los rasgos que desee, ${vocat()}.`),
+  horn:()=>tx('¿Con cuerno?','¿Le ponemos cuerno o nada?',`¿Desea que lleve cuerno, ${vocat()}?`),
+  fin:()=>tx('¿Qué acabado prefieres?','¿Cómo lo quieres, mate o bien brillosito?',`¿Qué acabado prefiere, ${vocat()}?`),
+  color:()=>tx('¿De qué color me pintas?','¿De qué color me pintas, causa?',`¿Qué color prefiere para mi cuerpo, ${vocat()}?`),
+  neon:()=>tx('¿Y mis lucecitas de neón, de qué color?','¿Y mis lucecitas, de qué color las ponemos?',`¿De qué color desea mis luces de neón, ${vocat()}?`),
+  ok:()=>tx('¡Mira cómo quedé! ¿Me guardas así?','¡Mira nomás cómo quedé! ¿Me guardas así, pata?',`Así he quedado, ${vocat()}. ¿Desea que me guarde?`)
+};
+const CROPT={
+  form:c=>c.fam==='bee'?[['abeja','Abeja'],['avispa','Avispa (delgada y veloz)']]:[['ci','Ciempiés: placas planas y pocas patas'],['mil','Milpiés: larguísimo y con muchas patas']],
+  legs:()=>[['cor','Cortas'],['nor','Normales'],['lar','Muy largas']],
+  horn:()=>[['no','Sin cuerno'],['nor','Cuerno normal'],['big','Cuerno grande']],
+  fin:()=>[['mate','Mate'],['metal','Metálico'],['cromo','Cromado']]
+};
+const SL={   // barras deslizantes
+  tam:{min:()=>60,max:()=>140,step:5,get:c=>c.tam||100,set:(c,v)=>{c.tam=v},fmt:v=>`Tamaño: ${v} %`},
+  largo:{min:c=>c.form==='mil'?14:6,max:c=>c.form==='mil'?60:26,step:1,get:c=>c.n||(c.form==='mil'?30:12),set:(c,v)=>{c.n=v},fmt:v=>`Largo: ${v} segmentos`}
+};
+const TRAITS=[['hairy','Peluda'],['hour','Reloj de arena'],['eyes','Ojos grandes'],['armor','Acorazada']];
+function specFromDef(id){                                     // convierte una mascota predeterminada en datos editables
+  const d=DEF[id],hd=(a,b)=>{const x=Math.abs(a-b)%360;return Math.min(x,360-x)};
+  let color='acero',best=1e9;for(const [k,[,h,sa]] of Object.entries(CR_COLORS)){const dd=hd(d.hue,h)+Math.abs(d.sat-sa)*.7;if(dd<best){best=dd;color=k}}
+  const rgb=h=>[1,3,5].map(i=>parseInt((h||'#7fd1ff').slice(i,i+2),16)||0);let neon='cian',b2=1e9;
+  if(d.glow)for(const [k,[,c]] of Object.entries(CR_NEON)){const a=rgb(d.glow),b=rgb(c),dd=Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2]);if(dd<b2){b2=dd;neon=k}}
+  const sp={fam:d.fam,name:d.name,color,neon,fin:(d.fin||0)>8?'cromo':(d.fin||0)<-4?'mate':'metal',tam:Math.max(60,Math.min(140,Math.round(100*(d.sc||1)*(d.size||1)))),traits:[],legs:'nor',horn:'nor',form:null,n:null};
+  if(d.fam==='centi'){sp.form=d.mil?'mil':'ci';sp.n=d.n||null}
+  if(d.fam==='spider'){sp.legs=d.leg>=70?'lar':d.leg>=40?'nor':'cor';if(d.hairy)sp.traits.push('hairy');if(d.hourglass)sp.traits.push('hour');if(d.bigEyes)sp.traits.push('eyes');if(d.armor)sp.traits.push('armor')}
+  if(d.fam==='beetle')sp.horn=d.horn===0?'no':(d.horn||1)>1.3?'big':'nor';
+  if(d.fam==='bee')sp.form=d.slim?'avispa':'abeja';
+  return sp;
+}
+function useCustom(){DEF.custom=buildCustom(cr);const h=segs[0];petKey='custom';gait=null;feet=null;initSegs(HS.x,HS.y,h.a)}   // la mascota cambia en vivo mientras eliges
+function startCreator(fromId){
+  crPrev=petKey;let base=null,slot=null;
+  if(fromId&&DEF[fromId]){const d=DEF[fromId];if(d.custom&&d.slot!=null){slot=d.slot;base=customs[slot]}else base=specFromDef(fromId)}
+  cr=Object.assign({fam:'ant',color:'acero',neon:'cian',fin:'metal',tam:100,legs:'nor',horn:'nor',traits:[],form:null,n:null,name:''},base||{},{step:0,saved:false,slot});
+  cr.traits=(cr.traits||[]).slice();
+  wizOnClose=()=>{                                              // si se cierra sin guardar, vuelve a la mascota anterior
+    if(cr&&!cr.saved){delete DEF.custom;const h=segs[0];petKey=(crPrev&&DEF[crPrev])?crPrev:'ciempies';gait=null;feet=null;initSegs(HS.x,HS.y,h.a)}
+    cr=null;
+  };
+  useCustom();vCreator();
+}
+function vCreator(){
+  const steps=CR_STEPS(cr);if(cr.step>=steps.length)cr.step=steps.length-1;
+  const key=steps[cr.step],n=steps.length;
+  const chips=(arr,sel)=>`<div class="chips">${arr.map(([k,l,extra])=>`<button class="chip ${sel(k)?'on':''}" data-v="${k}">${extra||''}${l}</button>`).join('')}</div>`;
+  let body;
+  if(key==='name')body=`<input id="v" placeholder="Nombre de tu mascota" value="${E(cr.name)}" maxlength="24">`;
+  else if(key==='fam')body=chips(Object.entries(CR_FAM).map(([k,[ic,l]])=>[k,l,ic+' ']),k=>cr.fam===k);
+  else if(key==='traits')body=chips(TRAITS,k=>cr.traits.includes(k));
+  else if(key==='color')body=chips(Object.entries(CR_COLORS).map(([k,[l,h,sa]])=>[k,l,`<i class="dot" style="background:hsl(${h},${Math.max(sa,30)}%,45%)"></i>`]),k=>cr.color===k);
+  else if(key==='neon')body=chips(Object.entries(CR_NEON).map(([k,[l,c]])=>[k,l,`<i class="dot" style="background:${c}"></i>`]),k=>cr.neon===k);
+  else if(SL[key]){const S=SL[key],mn=S.min(cr),mx=S.max(cr),val=Math.max(mn,Math.min(mx,S.get(cr)));body=`<input id="rg" type="range" min="${mn}" max="${mx}" step="${S.step}" value="${val}"><p class="mut" id="rv">${S.fmt(val)}</p>`}
+  else if(key==='ok')body=`<p><b>${E(cr.name||'Mi mascota')}</b> · ${CR_FAM[cr.fam][0]} ${CR_FAM[cr.fam][1]}</p><p class="mut">Mírame en la pantalla: así quedé.</p>`;
+  else body=chips(CROPT[key](cr),k=>cr[key]===k);
+  panel.innerHTML=head(`✨ ${cr.slot!=null?'Editar':'Crear'} mi mascota (${cr.step+1}/${n})`)+`<p>${E(CRQ[key]())}</p>${body}<div style="margin-top:8px">${cr.step>0?'<button id="bk">← Atrás</button> ':''}<button id="nx">${key==='ok'?'💾 Guardar mi mascota':'Siguiente →'}</button>${key==='ok'&&cr.slot!=null?' <button id="del">🗑 Eliminar</button>':''}</div>`;
+  wireClose();say(CRQ[key](),0);
+  panel.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{
+    const v=b.dataset.v;
+    if(key==='traits'){const i=cr.traits.indexOf(v);i<0?cr.traits.push(v):cr.traits.splice(i,1)}else cr[key]=v;
+    if(key==='form')cr.n=null;
+    useCustom();vCreator();
+  });
+  if(SL[key])$('#rg').oninput=()=>{const v=+$('#rg').value;SL[key].set(cr,v);$('#rv').textContent=SL[key].fmt(v);useCustom()};
+  if(key==='name'){$('#v').oninput=()=>{cr.name=$('#v').value.slice(0,24);DEF.custom.name=cr.name||'Mi mascota'};$('#v').focus()}
+  if($('#bk'))$('#bk').onclick=()=>{cr.step--;vCreator()};
+  if($('#del'))$('#del').onclick=deleteCustom;
+  $('#nx').onclick=()=>{
+    if(key==='name'){cr.name=($('#v').value||'').trim();if(!cr.name){say(tx('Necesito un nombre, ¡anda!','¡Ponme un nombre pues, no seas malo!',`Necesito un nombre, ${vocat()}.`),3000);return}}
+    if(key==='ok'){saveCreator();return}
+    cr.step++;useCustom();vCreator();
+  };
+}
+function deleteCustom(){customs.splice(cr.slot,1);store.set('customs',customs);cr.saved=true;delete DEF.custom;loadCustoms();petKey='ciempies';store.set('pet',petKey);gait=null;feet=null;initSegs(HS.x,HS.y,segs[0].a);closePanel();say('Mascota eliminada.',3000)}
+function saveCreator(){
+  const spec={...cr};['step','saved','slot'].forEach(k=>delete spec[k]);
+  if(cr.slot==null&&customs.length>=8){say('Ya tienes 8 mascotas propias: edita o elimina una.',4000);return}
+  const slot=cr.slot!=null?cr.slot:customs.length,pn=cr.name;
+  customs[slot]=spec;store.set('customs',customs);cr.saved=true;
+  delete DEF.custom;loadCustoms();petKey='yo'+slot;store.set('pet',petKey);gait=null;feet=null;initSegs(HS.x,HS.y,segs[0].a);
+  closePanel();
+  sayW(tx(`¡Listo! Soy ${pn}, tu nueva mascota. Me encanta cómo quedé.`,`¡Bacán! Soy ${pn}, tu mascota personalizada. ¡Qué bien me veo!`,`Encantado, ${vocat()}. Soy ${pn}, su mascota personalizada.`),4800);
+}
+
+// ---------- Modo overlay (solo en la app de escritorio con Electron) ----------
+const OV=!!window.overlayAPI;
+if(OV)document.documentElement.classList.add('overlay');
+let ovState=null,hover=false;
+addEventListener('mousemove',e=>{
+  if(!OV)return;
+  hover=!!(e.target.closest&&e.target.closest('.mb,#panel'))||segs.some(s=>{const k=psk(),h0=segs[0];return Math.hypot(e.clientX-(HS.x+k*(s.x-h0.x)),e.clientY-(HS.y+k*(s.y-h0.y)))<26});
+});
+function overlayTick(){
+  if(!OV)return;
+  const want=menuOpen||panelOpen||hover;
+  if(want!==ovState){ovState=want;window.overlayAPI.setInteractive(want)}
+}
+addEventListener('keydown',e=>{if(e.key==='Escape'){menuOpen=false;closePanel();refreshUI()}});
+
+// ---------- Bucle ----------
+let last=performance.now();
+(function loop(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  update(dt);ctx.clearRect(0,0,W,H);
+  {const h=segs[0],k=psk();ctx.save();ctx.translate(HS.x,HS.y);ctx.scale(k,k);ctx.translate(-h.x,-h.y);groundShadow();pet().draw();ctx.restore()}
+  layoutUI();overlayTick();requestAnimationFrame(loop);
+})(last);
+startup();
+if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
